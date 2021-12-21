@@ -1,6 +1,8 @@
 README
 
-From https://evamaerey.github.io/what_how_guides/academic_website_w_blogdown
+Personal website for academic stuff, blogging, etc. Will see how it evolves.
+
+To edit, follow instructions below. From https://evamaerey.github.io/what_how_guides/academic_website_w_blogdown
 
     Step 0: Link to Dan Quintana’s thread for reference
     Step 1: Install blogdown by running install.packages(“blogdown”) in the console
