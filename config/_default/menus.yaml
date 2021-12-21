@@ -19,6 +19,9 @@ main:
   - name: Publications
     url: 'https://academics.aut.ac.nz/nathan.henry/publications'
     weight: 50
+  - name: GitHub
+    url: 'https://github.com/nathhenry3'
+    weight: 50
   # - name: Courses
   #   url: courses/
   #   weight: 60
