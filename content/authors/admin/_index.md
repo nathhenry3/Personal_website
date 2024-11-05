@@ -35,7 +35,7 @@ social:
   link: https://x.com/nathhenry3
 - icon: graduation-cap
   icon_pack: fas
-  link: https://orcid.org/0000-0002-4299-1442
+  link: https://www.researchgate.net/profile/Nathan-Henry-4
 - icon: github
   icon_pack: fab
   link: https://github.com/nathhenry3
