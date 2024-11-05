@@ -24,9 +24,9 @@ organizations:
   url: https://www.uwa.edu.au
 role: Postdoctoral Research Associate
 social:
-- icon: envelope
-  icon_pack: fas
-  link: /#contact
+#- icon: envelope
+#  icon_pack: fas
+#  link: /#contact
 #- display:
 #    header: true
 - icon: twitter
