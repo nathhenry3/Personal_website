@@ -17,7 +17,7 @@ main:
   #   url: '#talks'
   #   weight: 40
   - name: Publications
-    url: 'https://academics.aut.ac.nz/nathan.henry/publications'
+    url: 'https://orcid.org/0000-0002-4299-1442'
     weight: 50
   - name: GitHub
     url: 'https://github.com/nathhenry3'
