@@ -39,7 +39,7 @@ subtitle: ''
 #   view: 4
 ---
 
-Nathan's publication list can be found [here](https://academics.aut.ac.nz/nathan.henry/publications).
+Nathan's publication list can be found [here](https://orcid.org/0000-0002-4299-1442).
 
 <!-- {{% callout note %}}
 Quickly discover relevant content by [filtering publications](./publication/).
