@@ -2,8 +2,8 @@
 #bio: I am a data manager/analyst at AUT University, and also doing a PhD in Psychology. 
 education:
   courses:
-  - course: PhD student in Psychology
-    institution: AUT
+  - course: PhD candidate in Psychology and Neuroscience
+    institution: Auckland University of Technology
     year: 2021-
   - course: MSc (Dist) in Medical Physics
     institution: University of Canterbury
@@ -11,46 +11,47 @@ education:
   - course: BTech (Hons) in Medical Physics
     institution: University of Auckland
     year: 2012-2015
-email: "nathan.henry@aut.ac.nz"
+email: "nathan.henry@uwa.edu.au"
 highlight_name: true
 interests:
 - Addiction psychology
+- Human factors
 - Statistical analysis
 - Programming (R, SQL, Python)
-- Web development
+- Artificial intelligence
 organizations:
-- name: AUT
-  url: https://www.aut.ac.nz
-role: Data Manager/Analyst, PhD Student
+- name: UWA
+  url: https://www.uwa.edu.au
+role: Postdoctoral Research Associate
 social:
 - icon: envelope
   icon_pack: fas
   link: /#contact
 #- display:
 #    header: true
-#  icon: twitter
-#  icon_pack: fab
+- icon: twitter
+  icon_pack: fab
 #  label: Follow me on Twitter
-#  link: https://twitter.com/GeorgeCushen
+  link: https://x.com/nathhenry3
 - icon: graduation-cap
   icon_pack: fas
-  link: https://academics.aut.ac.nz/nathan.henry/publications
+  link: https://orcid.org/0000-0002-4299-1442
 - icon: github
   icon_pack: fab
   link: https://github.com/nathhenry3
-#- icon: linkedin
-#  icon_pack: fab
-#  link: https://www.linkedin.com/
+- icon: linkedin
+  icon_pack: fab
+  link: https://www.linkedin.com/in/nathan-henry-5955b2b3/
 superuser: true
 title: Nathan Henry
 ---
 
-Nathan is a data manager and analyst in the Department of Biostatistics and Epidemiology at AUT University.
+Nathan is a postdoctoral research associate within the Human Factors and Applied Cognition lab, where he is developing novel paradigms for attentional control training to enhance the performance of submarine operators. His broader interests lie in the intersection between human psychology and digital technologies, including artificial intelligence.
+
+Nathan's doctoral research explored the psychological impact of Internet and pornography addiction, employing novel mathematical models to quantify the emotional dynamics produced by these behaviors. He previously worked as a data manager and analyst at Auckland University of Technology, providing statistical support within the Faculty of Health and Environmental Sciences.
 
 He originally trained as a physicist at the University of Auckland, before working at Auckland City Hospital as a Medical Physics Registrar. During this period, he obtained his Master's degree in Medical Physics at the University of Canterbury. 
 
-He is currently pursuing a PhD in the Department of Psychology, working on a novel intervention for pornography addiction. His broader interest is in the mathematical modelling of addiction pathways, with a focus on the real world applications of such models.
-
-You can find a list of Nathan's publications [here](https://academics.aut.ac.nz/nathan.henry/publications).
+You can find a list of Nathan's publications on [ORCID](https://orcid.org/0000-0002-4299-1442).
 
 <!-- {{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/resume.pdf" "newtab" >}}resumé{{< /staticref >}}. -->
