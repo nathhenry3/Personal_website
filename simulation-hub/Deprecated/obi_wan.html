@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jedi Deflection</title>
+  <style>
+    body { margin: 0; background: black; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Helper: Check if two rectangles intersect
+    function rectIntersect(r1, r2) {
+      return (
+        r1.x < r2.x + r2.width &&
+        r1.x + r1.width > r2.x &&
+        r1.y < r2.y + r2.height &&
+        r1.y + r1.height > r2.y
+      );
+    }
+
+    // Level information
+    let level = 1;
+
+    // Player (Obi-Wan)
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      size: 20,
+      speed: 5,
+      dx: 0,
+      dy: 0,
+      // Obi-Wan always blocks shots (even when moving)
+      blocking: true,
+      deflecting: false,
+      deflectAngle: 0
+    };
+
+    // Padme (the one droids hunt)
+    const padme = {
+      x: 50,
+      y: canvas.height / 2,
+      size: 20,
+      speed: 1.5,
+      alive: true
+    };
+
+    // Droids array
+    const droids = [];
+    let droidSpawnRate = 2000;
+    let lastDroidSpawn = 0;
+
+    // Lasers (gunshots)
+    const lasers = [];
+
+    // Key states for Obi-Wan's movement
+    const keys = {};
+    window.addEventListener("keydown", (e) => keys[e.key] = true);
+    window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+    // Move Obi-Wan based on arrow keys. He always blocks.
+    function movePlayer() {
+      player.dx = 0;
+      player.dy = 0;
+      if (keys["ArrowUp"]) player.dy = -player.speed;
+      if (keys["ArrowDown"]) player.dy = player.speed;
+      if (keys["ArrowLeft"]) player.dx = -player.speed;
+      if (keys["ArrowRight"]) player.dx = player.speed;
+      // Update player position within boundaries
+      player.x = Math.max(20, Math.min(canvas.width - 20, player.x + player.dx));
+      player.y = Math.max(20, Math.min(canvas.height - 20, player.y + player.dy));
+    }
+
+    // Padme moves automatically to the right.
+    function movePadme() {
+      if (padme.alive) {
+        padme.x += padme.speed;
+        // Level up if Padme makes it across
+        if (padme.x > canvas.width) {
+          level++;
+          // Reset Padme's position and optionally adjust difficulty
+          padme.x = 50;
+          padme.y = canvas.height / 2;
+          // You might increase speed or spawn rate here for added challenge
+          droidSpawnRate *= 0.95;
+        }
+      }
+    }
+
+    // Spawn droids at random edges.
+    function spawnDroid() {
+      let x, y;
+      let edge = Math.floor(Math.random() * 4);
+      if (edge === 0) { x = 0; y = Math.random() * canvas.height; }
+      else if (edge === 1) { x = canvas.width; y = Math.random() * canvas.height; }
+      else if (edge === 2) { x = Math.random() * canvas.width; y = 0; }
+      else { x = Math.random() * canvas.width; y = canvas.height; }
+      droids.push({ x, y, size: 20, speed: 2 });
+    }
+
+    // Droids now hunt down Padme instead of Obi-Wan.
+    function moveDroids() {
+      droids.forEach(droid => {
+        let angle = Math.atan2(padme.y - droid.y, padme.x - droid.x);
+        droid.x += Math.cos(angle) * droid.speed;
+        droid.y += Math.sin(angle) * droid.speed;
+
+        // Droids shoot lasers occasionally
+        if (Math.random() < 0.02) {
+          lasers.push({
+            x: droid.x,
+            y: droid.y,
+            size: 5,
+            dx: Math.cos(angle) * 5,
+            dy: Math.sin(angle) * 5,
+            fromDroid: true
+          });
+        }
+      });
+    }
+
+    // Update lasers: move them and check for collisions.
+    function moveLasers() {
+      // Define Obi-Wan's body rectangle
+      const playerRect = { x: player.x - 10, y: player.y - 10, width: 20, height: 20 };
+      // Define persistent lightsaber rectangle (extending to the right)
+      const lightsaberRect = { x: player.x + player.size, y: player.y - 5, width: 20, height: 10 };
+
+      lasers.forEach((laser, lIndex) => {
+        laser.x += laser.dx;
+        laser.y += laser.dy;
+
+        // Check collision with Obi-Wan or his lightsaber for deflection.
+        const laserRect = { x: laser.x, y: laser.y, width: laser.size, height: laser.size };
+        if (rectIntersect(laserRect, playerRect) || rectIntersect(laserRect, lightsaberRect)) {
+          if (player.blocking) {
+            player.deflecting = true;
+            // Use the collision vector from player's center for deflection angle
+            let distX = laser.x - player.x;
+            let distY = laser.y - player.y;
+            player.deflectAngle = Math.atan2(distY, distX);
+            // Brief deflection effect
+            setTimeout(() => player.deflecting = false, 200);
+            // Reflect the laser with some randomness
+            let reflectAngle = Math.atan2(-laser.dy, -laser.dx) + (Math.random() * 0.4 - 0.2);
+            laser.dx = Math.cos(reflectAngle) * 5;
+            laser.dy = Math.sin(reflectAngle) * 5;
+            laser.fromDroid = false;
+          }
+        }
+
+        // If laser hits Padme, she dies.
+        const padmeRect = { x: padme.x - 10, y: padme.y - 10, width: 20, height: 20 };
+        if (padme.alive && rectIntersect(laserRect, padmeRect)) {
+          padme.alive = false;
+        }
+
+        // If a deflected laser hits a droid, remove the droid.
+        droids.forEach((droid, dIndex) => {
+          const droidRect = { x: droid.x - 10, y: droid.y - 10, width: 20, height: 20 };
+          if (!laser.fromDroid && rectIntersect(laserRect, droidRect)) {
+            droids.splice(dIndex, 1);
+            lasers.splice(lIndex, 1);
+          }
+        });
+      });
+    }
+
+    // Always draw Obi-Wan with his persistent sky-blue lightsaber.
+    function drawPlayer() {
+      // Obi-Wan's body (blue)
+      ctx.fillStyle = "blue";
+      ctx.fillRect(player.x - 10, player.y - 10, 20, 20);
+
+      // Draw lightsaber (sky blue), extending to the right
+      ctx.fillStyle = "skyblue";
+      const lightsaberX = player.x + player.size;
+      const lightsaberY = player.y - 5;
+      ctx.fillRect(lightsaberX, lightsaberY, 20, 10);
+    }
+
+    // Draw Padme.
+    function drawPadme() {
+      if (padme.alive) {
+        ctx.fillStyle = "gold";
+        ctx.fillRect(padme.x - 10, padme.y - 10, 20, 20);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("GAME OVER! Padme was caught!", canvas.width / 2 - 200, canvas.height / 2);
+      }
+    }
+
+    // Draw droids and check for lightsaber collisions.
+    function drawDroids() {
+      ctx.fillStyle = "red";
+      // Define the persistent lightsaber rectangle for collision detection.
+      const lightsaberRect = { x: player.x + player.size, y: player.y - 5, width: 20, height: 10 };
+
+      // Loop backwards to allow removal
+      for (let i = droids.length - 1; i >= 0; i--) {
+        const droid = droids[i];
+        const droidRect = { x: droid.x - 10, y: droid.y - 10, width: 20, height: 20 };
+        // If Obi-Wan's lightsaber touches a droid, remove it.
+        if (rectIntersect(droidRect, lightsaberRect)) {
+          droids.splice(i, 1);
+          continue;
+        }
+        ctx.fillRect(droid.x - 10, droid.y - 10, 20, 20);
+      }
+    }
+
+    // Draw lasers (droid gunshots) in red.
+    function drawLasers() {
+      ctx.fillStyle = "red";
+      lasers.forEach(laser => {
+        ctx.fillRect(laser.x, laser.y, laser.size, laser.size);
+      });
+    }
+
+    // Optionally display level information.
+    function drawLevel() {
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Level: " + level, 10, 30);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawPadme();
+      drawDroids();
+      drawLasers();
+      drawLevel();
+    }
+
+    function update(time) {
+      // Stop updating if Padme is dead.
+      if (!padme.alive) {
+        draw();
+        return;
+      }
+      movePlayer();
+      movePadme();
+      moveDroids();
+      moveLasers();
+
+      // Spawn new droids based on the spawn rate.
+      if (time - lastDroidSpawn > droidSpawnRate) {
+        spawnDroid();
+        lastDroidSpawn = time;
+      }
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    requestAnimationFrame(update);
+  </script>
+</body>
+</html>

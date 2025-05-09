@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ominous Zombie FPS</title>
+<style>
+  body { margin: 0; overflow: hidden; background-color: #111; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Game state
+    let gameOver = false;
+
+    // World properties
+    const worldWidth = 2000; // Larger world width
+    const worldHeight = canvas.height;
+    let cameraX = 0;
+
+    // Player properties
+    const player = {
+      x: worldWidth / 4, // Start player somewhere in the world
+      y: worldHeight / 2,
+      speed: 3,
+      radius: 8,
+      angle: 0
+    };
+
+    // Laser properties
+    let laser = null;
+    const laserSpeed = 10;
+    const laserColor = 'red';
+
+    // Zombie properties
+    const zombies = [];
+    const zombieBaseSpeed = 1;
+    const zombieSpawnInterval = 80;
+    let zombieSpawnTimer = 0;
+
+    // Obstacles
+    const obstacles = [
+      { x: 100, y: 150, width: 80, height: 30 },
+      { x: 300, y: 250, width: 120, height: 40 },
+      { x: 550, y: 100, width: 60, height: 90 },
+      { x: 700, y: 350, width: 100, height: 50 },
+      { x: 900, y: 200, width: 40, height: 100 },
+      { x: 1100, y: 50, width: 150, height: 30 },
+      { x: 1350, y: 300, width: 70, height: 70 },
+      { x: 1500, y: 180, width: 90, height: 40 },
+      { x: 1700, y: 400, width: 50, height: 80 },
+      { x: 1850, y: 120, width: 110, height: 35 },
+      { x: 50, y: 400, width: 70, height: 60 },
+      { x: 400, y: 50, width: 90, height: 50 },
+      { x: 800, y: 450, width: 60, height: 70 },
+      { x: 1200, y: 280, width: 100, height: 40 },
+      { x: 1600, y: 380, width: 80, height: 60 }
+      // Add more obstacles as needed
+    ];
+
+    const zombieColors = {
+      redEye: 'black',
+      blueEye: 'darkslategray',
+      greenEye: 'darkolivegreen'
+    };
+
+    function spawnZombie(type) {
+      const side = Math.floor(Math.random() * 4);
+      let x, y;
+      const margin = 50;
+      if (side === 0) { x = Math.random() * worldWidth; y = -margin; }
+      else if (side === 1) { x = worldWidth + margin; y = Math.random() * worldHeight; }
+      else if (side === 2) { x = Math.random() * worldWidth; y = worldHeight + margin; }
+      else { x = -margin; y = Math.random() * worldHeight; }
+
+      const speedMultiplier = type === 'blueEye' ? 1.5 : (type === 'greenEye' ? 0.8 : 1);
+      zombies.push({
+        x: x,
+        y: y,
+        type: type,
+        speed: zombieBaseSpeed * speedMultiplier,
+        radius: 12,
+        eyeColor: type === 'blueEye' ? 'blue' : (type === 'greenEye' ? 'lime' : 'red'),
+        lastMoveDirection: { x: 0, y: 0 },
+        diffusionTimer: 0,
+        diffusionInterval: Math.random() * 50 + 30 // Randomly change direction
+      });
+    }
+
+    function movePlayer() {
+      let dx = 0;
+      let dy = 0;
+      if (keys['ArrowLeft']) dx -= player.speed;
+      if (keys['ArrowRight']) dx += player.speed;
+      if (keys['ArrowUp']) dy -= player.speed;
+      if (keys['ArrowDown']) dy += player.speed;
+
+      const newX = player.x + dx;
+      const newY = player.y + dy;
+
+      let canMove = true;
+      for (const obstacle of obstacles) {
+        if (checkCollision(newX - player.radius, newY - player.radius, player.radius * 2, player.radius * 2,
+                           obstacle.x, obstacle.y, obstacle.width, obstacle.height)) {
+          canMove = false;
+          break;
+        }
+      }
+
+      if (canMove) {
+        player.x = newX;
+        player.y = newY;
+
+        // Update camera position for horizontal scrolling
+        cameraX = Math.max(0, Math.min(worldWidth - canvas.width, player.x - canvas.width / 2));
+      }
+    }
+
+    function updateZombies() {
+      for (let i = zombies.length - 1; i >= 0; i--) {
+        const zombie = zombies[i];
+        let targetDirection;
+
+        if (zombie.type === 'greenEye') {
+          // Green-eyed zombies move directly towards the player
+          const angleToPlayer = Math.atan2(player.y - zombie.y, player.x - zombie.x);
+          targetDirection = { x: Math.cos(angleToPlayer), y: Math.sin(angleToPlayer) };
+          zombie.lastMoveDirection = targetDirection; // No diffusion
+        } else {
+          // Red and blue-eyed zombies have diffusion
+          const angleToPlayer = Math.atan2(player.y - zombie.y, player.x - zombie.x);
+          if (zombie.diffusionTimer <= 0) {
+            const randomAngle = (Math.random() - 0.5) * Math.PI * 0.5;
+            const diffusedAngle = angleToPlayer + randomAngle;
+            zombie.lastMoveDirection = { x: Math.cos(diffusedAngle), y: Math.sin(diffusedAngle) };
+            zombie.diffusionTimer = zombie.diffusionInterval;
+          } else {
+            zombie.diffusionTimer--;
+          }
+        }
+
+        const moveX = zombie.x + zombie.lastMoveDirection.x * zombie.speed;
+        const moveY = zombie.y + zombie.lastMoveDirection.y * zombie.speed;
+
+        let canMove = true;
+        for (const obstacle of obstacles) {
+          if (checkCollision(moveX - zombie.radius, moveY - zombie.radius, zombie.radius * 2, zombie.radius * 2,
+                             obstacle.x, obstacle.y, obstacle.width, obstacle.height)) {
+            canMove = false;
+            break;
+          }
+        }
+
+        if (canMove) {
+          zombie.x = moveX;
+          zombie.y = moveY;
+        }
+
+        // Check for collision with laser
+        if (laser && checkCircleCollision(zombie.x, zombie.y, zombie.radius, laser.x, laser.y, 2)) {
+          zombies.splice(i, 1);
+          spawnZombie(Math.random() < 0.6 ? 'redEye' : (Math.random() < 0.8 ? 'blueEye' : 'greenEye'));
+          spawnZombie(Math.random() < 0.6 ? 'redEye' : (Math.random() < 0.8 ? 'blueEye' : 'greenEye'));
+          laser = null;
+        }
+
+        // Check for collision with player
+        if (!gameOver && checkCircleCollision(zombie.x, zombie.y, zombie.radius, player.x, player.y, player.radius)) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function shoot() {
+      if (!gameOver && !laser) {
+        laser = {
+          x: player.x,
+          y: player.y,
+          angle: player.angle
+        };
+      }
+    }
+
+    function updateLaser() {
+      if (laser) {
+        laser.x += Math.cos(laser.angle) * laserSpeed;
+        laser.y += Math.sin(laser.angle) * laserSpeed;
+
+        if (laser.x < 0 || laser.x > worldWidth || laser.y < 0 || laser.y > worldHeight) {
+          laser = null;
+        }
+      }
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(player.x - cameraX, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'lightgray';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(player.x - cameraX, player.y);
+      ctx.lineTo(player.x - cameraX + Math.cos(player.angle) * 20, player.y + Math.sin(player.angle) * 20);
+      ctx.stroke();
+    }
+
+    function drawZombie(zombie) {
+      ctx.fillStyle = zombieColors[zombie.type === 'blueEye' ? 'blueEye' : (zombie.type === 'greenEye' ? 'greenEye' : 'redEye')];
+      ctx.beginPath();
+      ctx.arc(zombie.x - cameraX, zombie.y, zombie.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = zombie.eyeColor;
+      const eyeOffsetX = zombie.radius / 3;
+      const eyeOffsetY = -zombie.radius / 4;
+      const eyeRadius = 2;
+      ctx.beginPath();
+      ctx.arc(zombie.x - cameraX - eyeOffsetX, zombie.y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(zombie.x - cameraX + eyeOffsetX, zombie.y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(zombie.x - cameraX - zombie.radius / 3, zombie.y + zombie.radius / 3);
+      ctx.lineTo(zombie.x - cameraX + zombie.radius / 3, zombie.y + zombie.radius / 3);
+      ctx.stroke();
+    }
+
+    function drawLaser() {
+      if (laser) {
+        ctx.strokeStyle = laserColor;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(player.x - cameraX, player.y);
+        ctx.lineTo(laser.x - cameraX, laser.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawObstacle(obstacle) {
+      ctx.fillStyle = 'gray';
+      ctx.fillRect(obstacle.x - cameraX, obstacle.y, obstacle.width, obstacle.height);
+    }
+
+    function checkCollision(rectX1, rectY1, rectW1, rectH1, rectX2, rectY2, rectW2, rectH2) {
+      return (
+        rectX1 < rectX2 + rectW2 &&
+        rectX1 + rectW1 > rectX2 &&
+        rectY1 < rectY2 + rectH2 &&
+        rectY1 + rectH1 > rectY2
+      );
+    }
+
+    function checkCircleCollision(circleX1, circleY1, radius1, circleX2, circleY2, radius2) {
+      const dx = circleX1 - circleX2;
+      const dy = circleY1 - circleY2;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < radius1 + radius2;
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameOver) {
+        movePlayer();
+        updateZombies();
+        updateLaser();
+
+        if (zombies.length < 8 && zombieSpawnTimer <= 0) {
+          spawnZombie(Math.random() < 0.6 ? 'redEye' : (Math.random() < 0.8 ? 'blueEye' : 'greenEye'));
+          zombieSpawnTimer = zombieSpawnInterval;
+        }
+        zombieSpawnTimer--;
+        if (zombieSpawnTimer < 0) zombieSpawnTimer = 0;
+
+        for (const obstacle of obstacles) {
+          drawObstacle(obstacle);
+        }
+        drawPlayer();
+        for (const zombie of zombies) {
+          drawZombie(zombie);
+        }
+        drawLaser();
+
+        requestAnimationFrame(gameLoop);
+      } else {
+        // Game Over screen
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'red';
+        ctx.font = '48px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+      }
+    }
+
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const angle = Math.atan2(e.clientY - player.y, e.clientX - (player.x - cameraX));
+      player.angle = angle;
+    });
+
+    canvas.addEventListener('click', () => {
+      shoot();
+    });
+
+    // Start the game
+    for (let i = 0; i < 3; i++) {
+      spawnZombie(Math.random() < 0.6 ? 'redEye' : (Math.random() < 0.8 ? 'blueEye' : 'greenEye'));
+    }
+    gameLoop();
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1000-Neuron Diffusion Simulation with Refractory Periods</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
+    canvas { border: 1px solid #ccc; margin: 10px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- simulation grid canvas -->
+  <canvas id="simulationCanvas" width="1000" height="1000"></canvas>
+  <!-- AP traces canvas -->
+  <canvas id="apChart" width="1000" height="300"></canvas>
+  <script>
+    // PARAMETERS
+    const NUM_NEURONS = 1000;
+    const PARTICLES = 50;
+    const STEP_SIZE = 1;
+    const REFRACTORY_FRAMES = 100;
+    const AP_WAVEFORM = [0, 60, 120, 60, 0, -10, -15, -17, -14, -10, -5, 0];
+
+    // DYNAMIC GRID LAYOUT
+    const canvasWidth = 1000;
+    const margin = 10;
+    const cols = Math.ceil(Math.sqrt(NUM_NEURONS));
+    const rows = Math.ceil(NUM_NEURONS / cols);
+    const spacing = 5;
+    const boxWidth = (canvasWidth - 2 * margin - (cols - 1) * spacing) / cols;
+    const boxHeight = boxWidth;
+
+    // CREATE NEURON BOXES
+    const neurons = Array.from({ length: NUM_NEURONS }, (_, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      return {
+        id: i + 1,
+        x: margin + col * (boxWidth + spacing),
+        yStart: margin + row * (boxHeight + spacing),
+        width: boxWidth,
+        height: boxHeight
+      };
+    });
+
+    // MOLECULE CLASS
+    class Molecule {
+      constructor(neuron) {
+        this.neuron = neuron;
+        this.x = neuron.x + Math.random() * neuron.width;
+        this.y = neuron.yStart;
+      }
+      step() {
+        const angle = Math.random() * 2 * Math.PI;
+        let nx = this.x + STEP_SIZE * Math.cos(angle);
+        let ny = this.y + STEP_SIZE * Math.sin(angle);
+        this.x = Math.min(Math.max(nx, this.neuron.x), this.neuron.x + this.neuron.width);
+        this.y = ny < this.neuron.yStart ? this.neuron.yStart : ny;
+      }
+      atEnd() {
+        return this.y >= this.neuron.yStart + this.neuron.height;
+      }
+    }
+
+    // CANVAS CONTEXTS
+    const simCanvas = document.getElementById('simulationCanvas');
+    const simCtx = simCanvas.getContext('2d');
+    const apCtx = document.getElementById('apChart').getContext('2d');
+
+    // STATE
+    let molecules = [];
+    const refractory = Array(NUM_NEURONS).fill(0);
+    const apQueues = Array.from({ length: NUM_NEURONS }, () => []);
+
+    // INITIALIZE MOLECULES
+    neurons.forEach(neuron => {
+      for (let i = 0; i < PARTICLES; i++) {
+        molecules.push(new Molecule(neuron));
+      }
+    });
+
+    // SETUP CHART.JS (no legend)
+    const datasets = neurons.map(n => ({ data: [], borderWidth: 1, fill: false }))
+      .concat({ data: [], borderWidth: 2, borderDash: [5,5], fill: false });
+    const apChart = new Chart(apCtx, {
+      type: 'line',
+      data: { labels: [], datasets },
+      options: {
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { title: { display: true, text: 'Time (frames)' } },
+          y: { title: { display: true, text: 'Voltage (mV)' } }
+        }
+      }
+    });
+
+    // ANIMATION LOOP
+    let frame = 0;
+    function animate() {
+      simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+      // decrement refractory timers
+      refractory.forEach((t, i) => { if (t > 0) refractory[i]--; });
+
+      // draw neuron boxes
+      neurons.forEach(n => {
+        simCtx.strokeStyle = '#000';
+        simCtx.strokeRect(n.x, n.yStart, n.width, n.height);
+      });
+
+      // step molecules
+      for (let i = molecules.length - 1; i >= 0; i--) {
+        const m = molecules[i];
+        const idx = m.neuron.id - 1;
+        m.step();
+        if (m.atEnd()) {
+          if (refractory[idx] === 0) {
+            apQueues[idx].push([...AP_WAVEFORM]);
+            refractory[idx] = REFRACTORY_FRAMES;
+            molecules.splice(i, 1);
+          } else {
+            m.y = m.neuron.yStart + m.neuron.height - 1;
+          }
+        } else {
+          simCtx.fillStyle = '#007bff';
+          simCtx.fillRect(m.x - 2, m.y - 2, 4, 4);
+        }
+      }
+
+      // update AP chart every 5 frames
+      frame++;
+      if (frame % 5 === 0) {
+        apChart.data.labels.push(frame);
+        const totals = [];
+        apChart.data.datasets.forEach((ds, idx) => {
+          if (idx < NUM_NEURONS) {
+            let v = 0;
+            apQueues[idx] = apQueues[idx].filter(w => { v += w.shift(); return w.length > 0; });
+            ds.data.push(v);
+            totals.push(v);
+          } else {
+            ds.data.push(totals.reduce((a,b) => a + b, 0));
+          }
+        });
+        apChart.update();
+      }
+
+      // continue or end
+      if (molecules.length > 0) requestAnimationFrame(animate);
+      else {
+        simCtx.fillStyle = 'red'; simCtx.font = '24px sans-serif';
+        simCtx.fillText('Simulation complete', canvasWidth/2 - 100, canvasHeight/2);
+      }
+    }
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jedi Intercept (2-Player)</title>
+    <style>
+        body { margin: 0; background: black; overflow: hidden; }
+        canvas { display: block; image-rendering: pixelated; /* Good for pixel art */ }
+        /* Instructions overlay styling */
+        #instructionsOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 20px;
+        }
+        #instructionsOverlay h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        #instructionsOverlay p {
+            font-size: 20px;
+            line-height: 1.5;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+         #instructionsOverlay .controls p {
+            font-size: 18px; /* Slightly smaller for controls */
+            margin: 5px 0;
+         }
+        #startButton, #restartButton {
+            font-size: 20px;
+            padding: 10px 20px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 10; /* Ensure buttons are clickable over canvas */
+        }
+        #startButton:hover, #restartButton:hover {
+            background-color: #666;
+        }
+        #restartButton {
+            display: none; /* Initially hidden */
+            position: absolute;
+            top: 65%; /* Position below game over message */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30; /* Make sure it's above overlay/canvas */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="instructionsOverlay">
+		<h1>Jedi Intercept</h1>
+		<p>
+			The Separatists are attempting to intercept Queen Amidala.
+			As Jedi Knights, your mission is to shield her and clear a path
+			through enemy forces.
+		</p>
+		<div class="controls">
+			<p><b>Obi-Wan (Player 1):</b> Control movement using ↑↓←→.</p>
+			<p><b>Qui-Gon (Player 2):</b> Control movement using W A S D.</p>
+			<p>Lightsabers will deflect incoming bolts. Engage enemies at close range.</p>
+		</div>
+		<p>Defend the Queen at all costs.</p>
+		<button id="startButton">Engage</button>
+	</div>
+    <button id="restartButton">Restart Game</button>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const instructionsOverlay = document.getElementById("instructionsOverlay");
+        const startButton = document.getElementById("startButton");
+        const restartButton = document.getElementById("restartButton");
+
+        let gameStarted = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        // --- Asset Loading ---
+        const sprites = {
+            obiwan: new Image(),
+            obiwanLightsaber: new Image(), // Blue saber
+            quigon: new Image(),
+            quigonLightsaber: new Image(), // Green saber
+            padme: new Image(),
+            soldier: new Image(),
+            droid: new Image(),
+            droideka: new Image(),
+            tank: new Image(),
+            background: new Image(),
+        };
+
+        // !!! REPLACE THESE WITH YOUR ACTUAL IMAGE PATHS !!!
+        // Assuming you have these image files in the same directory or specified paths
+        sprites.obiwan.src = 'obiwan.webp'; // Example path
+        sprites.obiwanLightsaber.src = 'lightsaber_blue.webp'; // Example path
+        sprites.quigon.src = 'quigon.webp'; // Example path
+        sprites.quigonLightsaber.src = 'lightsaber_green.png'; // Example path
+        sprites.padme.src = 'padme.png'; // Example path
+        sprites.soldier.src = 'clone_trooper.webp'; // Example path
+        sprites.droid.src = 'battle_droid.webp'; // Example path
+        sprites.droideka.src = 'droideka.png'; // Example path
+        sprites.tank.src = 'aat_tank.webp'; // Example path
+		sprites.background.src = 'naboo_background.webp'
+		
+		// --- New: Track asset loading state ---
+        let assetsLoaded = false; // Track if assets are loaded
+
+        // --- New: Check if all assets are loaded ---
+        function areAllAssetsLoaded() {
+            for (const key in sprites) {
+                if (sprites.hasOwnProperty(key)) {
+                    const img = sprites[key];
+                    // Check if the image object exists AND hasn't completed loading or failed
+                    if (!img.complete || img.naturalWidth === 0) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // --- New: Wait for assets to load before starting ---
+        function waitForAssets(callback) {
+             if (areAllAssetsLoaded()) {
+                 assetsLoaded = true;
+                 callback(); // Assets are already loaded, proceed
+             } else {
+                 // If not loaded, add load listeners to *all* images
+                 let imagesToLoad = Object.keys(sprites).length;
+                 let loadedCount = 0;
+
+                 const checkLoad = () => {
+                     loadedCount++;
+                     if (loadedCount === imagesToLoad) {
+                        assetsLoaded = true;
+                         // Double check just in case, though should be true now
+                         if (areAllAssetsLoaded()) {
+                             callback(); // All assets loaded, proceed
+                         } else {
+                             console.error("Some assets failed to load!");
+                             // Handle error - maybe show a message or use fallback
+                             // For now, we'll proceed anyway, relying on drawing checks
+                             callback();
+                         }
+                     }
+                 };
+
+                 for (const key in sprites) {
+                    if (sprites.hasOwnProperty(key)) {
+                        const img = sprites[key];
+                        // If already loaded (e.g., from a previous call), count it
+                        if (img.complete && img.naturalWidth !== 0) {
+                            loadedCount++;
+                        } else {
+                            // Add listeners for images that are not yet complete
+                            img.addEventListener('load', checkLoad);
+                            img.addEventListener('error', checkLoad); // Count failed loads too
+                        }
+                    }
+                 }
+
+                 // If all were already loaded (loadedCount equals imagesToLoad initially),
+                 // checkLoad won't be called enough times, so check here.
+                 if (loadedCount === imagesToLoad) {
+                     assetsLoaded = true;
+                     if (areAllAssetsLoaded()) {
+                        callback();
+                     } else {
+                        console.error("Some assets failed to load immediately after check!");
+                        callback();
+                     }
+                 }
+             }
+         }
+
+        // ... rest of your game variables and functions
+
+        // Helper: Rectangle collision detection. (Keep as is)
+        function rectIntersect(r1, r2) {
+            return (
+                r1.x < r2.x + r2.width &&
+                r1.x + r1.width > r2.x &&
+                r1.y < r2.y + r2.height &&
+                r1.y + r1.height > r2.y
+            );
+        }
+
+        // --- Explosion Animation --- (Keep as is)
+        const explosions = [];
+        function addExplosion(x, y) {
+             explosions.push({
+                x, y,
+                radius: 0,
+                maxRadius: 30 + Math.random() * 20, // Adjust size if needed
+                alpha: 1,
+                growth: 0.5 + Math.random() * 0.5
+            });
+        }
+         function updateExplosions() {
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const exp = explosions[i];
+                exp.radius += exp.growth;
+                exp.alpha -= 0.02;
+                if (exp.alpha <= 0) {
+                    explosions.splice(i, 1);
+                }
+            }
+        }
+         function drawExplosions() {
+            explosions.forEach(exp => {
+                ctx.beginPath();
+                ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,165,0,${exp.alpha})`; // orange explosion
+                ctx.fill();
+            });
+        }
+
+
+        // --- Game Variables ---
+        let level = 1;
+        let levelMessageTime = 0;
+        let gameStartTime = Date.now();
+
+        // Player 1 (Obi-Wan)
+        const player1 = {
+            x: canvas.width / 2 - 100, // Offset from center
+            y: canvas.height / 2,
+            size: 50,
+            speed: 8,
+            dx: 0,
+            dy: 0,
+            blocking: true, // Auto-block is still on
+            deflecting: false,
+            deflectAngle: 0,
+            lightsaberOffset: 15, // Adjust based on sprite (might need tweaking)
+            lightsaberWidth: 50,
+            lightsaberHeight: 12,
+            saberColor: "skyblue", // For fallback drawing
+            saberSprite: sprites.obiwanLightsaber,
+            playerSprite: sprites.obiwan,
+            lightsaberGlow: 0 // Individual glow for each saber
+        };
+
+        // Player 2 (Qui-Gon)
+        const player2 = {
+             x: canvas.width / 2 + 100, // Offset from center
+             y: canvas.height / 2,
+             size: 50, // Same size as Obi-Wan
+             speed: 8, // Same speed
+             dx: 0,
+             dy: 0,
+             blocking: true, // Also auto-blocks
+             deflecting: false,
+             deflectAngle: 0,
+             lightsaberOffset: 15, // Adjust based on sprite
+             lightsaberWidth: 50,
+             lightsaberHeight: 12,
+             saberColor: "lightgreen", // For fallback drawing
+             saberSprite: sprites.quigonLightsaber,
+             playerSprite: sprites.quigon,
+             lightsaberGlow: 0 // Individual glow
+         };
+
+        const players = [player1, player2]; // Array to easily loop through players
+
+        // Padme: now with health
+        const padme = {
+            baseX: 50,
+            x: 50,
+            y: canvas.height / 2,
+            size: 44,
+            speed: 1.5,
+            alive: true,
+            maxHealth: 10,
+            health: 10
+        };
+
+        // Soldiers: 6 units, now with health
+        const soldiers = [];
+        function initializeSoldiers() {
+            soldiers.length = 0; // Clear existing soldiers first
+            for (let i = 0; i < 6; i++) {
+                 soldiers.push({
+                     x: Math.random() * canvas.width,
+                     y: Math.random() * canvas.height,
+                     size: 38,
+                     dx: Math.random() * 4 - 2,
+                     dy: Math.random() * 4 - 2,
+                     alive: true,
+                     maxHealth: 5,
+                     health: 5,
+                     lastShot: 0,
+                     shootInterval: 1200
+                 });
+             }
+        }
+        initializeSoldiers(); // Initial setup
+
+        // Enemies arrays.
+        const droids = [];
+        const droidekas = [];
+        const tanks = [];
+
+        // Spawn rates and timers.
+        let droidSpawnRate = 3000;
+        let lastDroidSpawn = 0;
+        let droidekaSpawnRate = 7000; // Slightly increased initial spawn time
+        let lastDroidekaSpawn = 0;
+        let tankSpawnRate = 10000; // Slightly increased initial spawn time
+        let lastTankSpawn = 0;
+
+        // Lasers (for enemy and friendly shots).
+        const lasers = [];
+
+        // Key states (Keep as is)
+        const keys = {};
+        window.addEventListener("keydown", (e) => {
+             keys[e.key] = true;
+             // Prevent default behavior for movement keys
+             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
+                 e.preventDefault();
+             }
+         });
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        // --- Movement Functions ---
+        function movePlayers() {
+             // Obi-Wan (Player 1)
+             player1.dx = 0;
+             player1.dy = 0;
+             if (keys["ArrowUp"]) player1.dy = -player1.speed;
+             if (keys["ArrowDown"]) player1.dy = player1.speed;
+             if (keys["ArrowLeft"]) player1.dx = -player1.speed;
+             if (keys["ArrowRight"]) player1.dx = player1.speed;
+
+             // Qui-Gon (Player 2)
+             player2.dx = 0;
+             player2.dy = 0;
+             if (keys["w"]) player2.dy = -player2.speed;
+             if (keys["s"]) player2.dy = player2.speed;
+             if (keys["a"]) player2.dx = -player2.speed;
+             if (keys["d"]) player2.dx = player2.speed;
+
+             // Update positions and keep within bounds for both players
+             players.forEach(player => {
+                 player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x + player.dx));
+                 player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y + player.dy));
+             });
+         }
+
+        function movePadme() { // (Logic remains similar, check health for game over)
+            if (padme.alive) {
+                padme.baseX += padme.speed;
+                padme.x = padme.baseX;
+                // Keep y centered for simplicity, or add vertical movement if desired
+                padme.y = canvas.height / 2;
+
+                // Level up logic (no changes needed here)
+                if ((padme.speed > 0 && padme.baseX > canvas.width - padme.size / 2) || (padme.speed < 0 && padme.baseX < padme.size / 2)) {
+                    level++;
+                    levelMessageTime = Date.now() + 2000;
+                    padme.speed = -padme.speed; // Reverse direction
+                    // Reset position to the edge she came from
+                    padme.baseX = padme.speed > 0 ? padme.size / 2 : canvas.width - padme.size / 2;
+                    padme.x = padme.baseX;
+
+                    // Difficulty scaling (adjust as needed)
+                    droidSpawnRate = Math.max(500, droidSpawnRate * 0.95); // Ensure minimum spawn time
+                     if (level >= 2) {
+                         droidekaSpawnRate = Math.max(2000, droidekaSpawnRate * 0.95);
+                     }
+                     if (level >= 3) {
+                         tankSpawnRate = Math.max(4000, tankSpawnRate * 0.95);
+                     }
+                }
+            }
+            // Game over check is now implicit in moveLasers when health hits 0
+        }
+
+        function moveSoldiers(time) { // (Logic similar, check alive status)
+             soldiers.forEach(soldier => {
+                 if (!soldier.alive) return; // Skip dead soldiers
+
+                 // Movement
+                 soldier.x += soldier.dx;
+                 soldier.y += soldier.dy;
+
+                 // Boundary collision
+                 if (soldier.x < soldier.size / 2 || soldier.x > canvas.width - soldier.size / 2) {
+                     soldier.dx = -soldier.dx;
+                     soldier.x = Math.max(soldier.size / 2, Math.min(canvas.width - soldier.size / 2, soldier.x));
+                 }
+                 if (soldier.y < soldier.size / 2 || soldier.y > canvas.height - soldier.size / 2) {
+                     soldier.dy = -soldier.dy;
+                     soldier.y = Math.max(soldier.size / 2, Math.min(canvas.height - soldier.size / 2, soldier.y));
+                 }
+
+                 // Shooting logic (target closest droid - could be improved)
+                 if (time - soldier.lastShot > soldier.shootInterval) {
+                     let target = null;
+                     let minDist = Infinity;
+
+                     // Target droids, droidekas, and tanks
+                     const allEnemies = [...droids, ...droidekas, ...tanks];
+
+                     allEnemies.forEach(enemy => {
+                         // Check if the enemy is actually on screen / exists before calculating distance
+                         if (!enemy) return;
+                         let dx = enemy.x - soldier.x;
+                         let dy = enemy.y - soldier.y;
+                         let dist = Math.hypot(dx, dy);
+                         if (dist < minDist && dist < canvas.width / 2) { // Only target enemies within half screen width
+                             minDist = dist;
+                             target = enemy;
+                         }
+                     });
+
+                     if (target) {
+                         let angle = Math.atan2(target.y - soldier.y, target.x - soldier.x);
+                         lasers.push({
+                             x: soldier.x,
+                             y: soldier.y,
+                             width: 10, height: 3, // Laser size
+                             dx: Math.cos(angle) * 9, // Laser speed
+                             dy: Math.sin(angle) * 9,
+                             fromDroid: false,
+                             fromSoldier: true,
+                             damage: 1 // --- NEW: Define damage
+                         });
+                         soldier.lastShot = time;
+                     }
+                 }
+             });
+         }
+
+        // --- Enemy Spawning --- (Adjust sizes based on sprites)
+        function spawnDroid() {
+            let x = Math.random() * canvas.width;
+            let y = (Math.random() < 0.5) ? -20 : canvas.height + 20; // Spawn off-screen
+             droids.push({ x, y, size: 32, speed: 1.2, health: 2 }); // <<< MODIFIED: Increased size
+        }
+
+        function spawnDroideka() {
+            if (level < 2) return;
+            let x = Math.random() * canvas.width;
+            let y = (Math.random() < 0.5) ? -30 : canvas.height + 30; // Spawn off-screen
+             droidekas.push({ x, y, size: 44, speed: 2, health: 7 }); // <<< MODIFIED: Increased size
+        }
+
+        function spawnTank() {
+            if (level < 3) return;
+            let x = Math.random() * canvas.width;
+            let y = (Math.random() < 0.5) ? -40 : canvas.height + 40; // Spawn off-screen
+             tanks.push({ x, y, size: 62, speed: 1, health: 15 }); // <<< MODIFIED: Increased size
+        }
+
+        // --- Enemy Movement --- (Aiming logic remains the same)
+        function moveDroids() {
+            droids.forEach((droid, index) => {
+                 let target = padme.alive ? padme : players[Math.floor(Math.random() * players.length)]; // Target Padme, or a random player if Padme is down
+                 let angle = Math.atan2(target.y - droid.y, target.x - droid.x);
+                 droid.x += Math.cos(angle) * droid.speed;
+                 droid.y += Math.sin(angle) * droid.speed;
+
+                // Firing logic
+                if (Math.random() < 0.01) { // Slightly increased fire rate
+                     lasers.push({
+                         x: droid.x, y: droid.y,
+                         width: 10, height: 3, // Laser size
+                         dx: Math.cos(angle) * 4, // Laser speed
+                         dy: Math.sin(angle) * 4,
+                         fromDroid: true, fromSoldier: false,
+                         damage: 1 // --- NEW: Define damage
+                     });
+                 }
+            });
+        }
+
+        function moveDroidekas() {
+            droidekas.forEach((droideka, index) => {
+                 let target = padme.alive ? padme : players[Math.floor(Math.random() * players.length)]; // Target Padme, or a random player
+                 let angle = Math.atan2(target.y - droideka.y, target.x - droideka.x);
+                 droideka.x += Math.cos(angle) * droideka.speed;
+                 droideka.y += Math.sin(angle) * droideka.speed;
+
+                // Dual fire logic
+                if (Math.random() < 0.03) {
+                     const baseSpeed = 6;
+                     lasers.push({
+                         x: droideka.x, y: droideka.y, size: 5,
+                         dx: Math.cos(angle) * baseSpeed, dy: Math.sin(angle) * baseSpeed,
+                         fromDroid: true, fromSoldier: false, damage: 1
+                     });
+                     lasers.push({ // Second shot slightly offset
+                         x: droideka.x, y: droideka.y, size: 5,
+                         dx: Math.cos(angle + 0.1) * baseSpeed, dy: Math.sin(angle + 0.1) * baseSpeed,
+                         fromDroid: true, fromSoldier: false, damage: 1
+                     });
+                 }
+            });
+        }
+
+        function moveTanks() {
+            tanks.forEach((tank, index) => {
+                 let target = padme.alive ? padme : players[Math.floor(Math.random() * players.length)]; // Target Padme, or a random player
+                 let angle = Math.atan2(target.y - tank.y, target.x - tank.x);
+                 tank.x += Math.cos(angle) * tank.speed;
+                 tank.y += Math.sin(angle) * tank.speed;
+
+                // Tank firing (slower, more powerful?)
+                if (Math.random() < 0.005) {
+                     lasers.push({
+                         x: tank.x, y: tank.y, size: 8, // Larger laser
+                         dx: Math.cos(angle) * 5, // Faster shot
+                         dy: Math.sin(angle) * 5,
+                         fromDroid: true, fromSoldier: false,
+                         damage: 3 // --- NEW: Higher damage
+                     });
+                 }
+            });
+        }
+
+
+        // --- Laser Movement and Collision --- UPDATED for Health and 2 Players
+        function moveLasers() {
+             // Define rects for Padme and Soldiers (players will be checked in the loop)
+             const padmeRect = { x: padme.x - padme.size / 2, y: padme.y - padme.size / 2, width: padme.size, height: padme.size };
+
+            for (let lIndex = lasers.length - 1; lIndex >= 0; lIndex--) {
+                const laser = lasers[lIndex];
+                laser.x += laser.dx;
+                laser.y += laser.dy;
+
+                // Define laser rect based on its properties
+                const laserWidth = laser.width || laser.size || 5; // Default size
+                const laserHeight = laser.height || laser.size || 5;
+                const laserRect = { x: laser.x - laserWidth / 2, y: laser.y - laserHeight / 2, width: laserWidth, height: laserHeight };
+
+                // Remove lasers going off-screen
+                if (laser.x < -laserWidth || laser.x > canvas.width + laserWidth || laser.y < -laserHeight || laser.y > canvas.height + laserHeight) {
+                    lasers.splice(lIndex, 1);
+                    continue;
+                }
+
+                // --- Player Deflection ---
+                let deflected = false;
+                 if (laser.fromDroid) { // Only attempt to deflect enemy lasers
+                     players.forEach(player => {
+                         const playerRect = { x: player.x - player.size / 2, y: player.y - player.size / 2, width: player.size, height: player.size };
+                         const lightsaberRect = {
+                             x: player.x + player.lightsaberOffset - player.lightsaberWidth / 2,
+                             y: player.y - player.lightsaberHeight / 2,
+                             width: player.lightsaberWidth,
+                             height: player.lightsaberHeight
+                         };
+
+                         // Check collision with player body OR lightsaber
+                         if (rectIntersect(laserRect, playerRect) || rectIntersect(laserRect, lightsaberRect)) {
+                             if (player.blocking) { // Check if the player is currently blocking (which they are by default)
+                                 player.deflecting = true; // Visual flag
+                                 player.lightsaberGlow = 10;      // Visual feedback
+
+                                 // Reflect the laser (simple reflection + randomness)
+                                 let reflectAngle = Math.atan2(-laser.dy, -laser.dx) + (Math.random() * 0.4 - 0.2); // Add some variance
+                                 laser.dx = Math.cos(reflectAngle) * 7; // Deflected bolts are faster
+                                 laser.dy = Math.sin(reflectAngle) * 7;
+                                 laser.fromDroid = false;   // Now it's a friendly bolt
+                                 laser.fromSoldier = false; // Not from a soldier either
+                                 deflected = true;
+                                 // Don't remove the laser, let it fly back
+                                 // continue; // Don't use continue here, need to break out of players loop
+                             }
+                             // Optional: If not blocking, handle player damage here (not implemented in original)
+                             // If players can take damage, add collision check here for player body + remove laser + reduce player health
+                         }
+                     });
+                 }
+                if (deflected) continue; // Laser was deflected by one of the players, skip other checks for this laser this frame
+
+
+                // --- Padme Collision --- (UPDATED FOR HEALTH)
+                if (padme.alive && laser.fromDroid && rectIntersect(laserRect, padmeRect)) {
+                    padme.health -= laser.damage || 1; // Use laser damage, default to 1
+                    lasers.splice(lIndex, 1); // Remove the laser
+                    if (padme.health <= 0) {
+                        padme.alive = false;
+                        addExplosion(padme.x, padme.y);
+                        restartButton.style.display = 'block'; // Show restart button immediately
+                    }
+                    continue; // Laser hit Padme, stop checking
+                }
+
+                // --- Soldier Collision --- (UPDATED FOR HEALTH)
+                 let hitSoldier = false;
+                 if (laser.fromDroid) {
+                     for (let sIndex = soldiers.length - 1; sIndex >= 0; sIndex--) {
+                         const soldier = soldiers[sIndex];
+                         if (soldier.alive) {
+                             const soldierRect = { x: soldier.x - soldier.size / 2, y: soldier.y - soldier.size / 2, width: soldier.size, height: soldier.size };
+                             if (rectIntersect(laserRect, soldierRect)) {
+                                 soldier.health -= laser.damage || 1;
+                                 lasers.splice(lIndex, 1);
+                                 hitSoldier = true;
+                                 if (soldier.health <= 0) {
+                                     soldier.alive = false;
+                                     addExplosion(soldier.x, soldier.y);
+                                     // Optional: remove soldier from array? Or just keep them dead. Keeping is simpler.
+                                 }
+                                 break; // Laser hit a soldier, stop checking soldiers
+                             }
+                         }
+                     }
+                 }
+                 if (hitSoldier) continue; // Laser was destroyed hitting a soldier
+
+                // --- Enemy Collision (Friendly Fire - Deflected or Soldier Shots) ---
+                if (!laser.fromDroid) { // Hit check only for friendly lasers (deflected or from soldiers)
+                     let hitEnemy = false;
+                     // Check Droids
+                     for (let i = droids.length - 1; i >= 0; i--) {
+                         const droid = droids[i];
+                         const droidRect = { x: droid.x - droid.size / 2, y: droid.y - droid.size / 2, width: droid.size, height: droid.size };
+                         if (rectIntersect(laserRect, droidRect)) {
+                             // Droids don't have health in this example, instant kill
+                             addExplosion(droid.x, droid.y);
+                             droids.splice(i, 1);
+                             lasers.splice(lIndex, 1);
+                             hitEnemy = true;
+                             break;
+                         }
+                     }
+                     if (hitEnemy) continue;
+
+                     // Check Droidekas
+                     for (let i = droidekas.length - 1; i >= 0; i--) {
+                         const droideka = droidekas[i];
+                         const droidekaRect = { x: droideka.x - droideka.size / 2, y: droideka.y - droideka.size / 2, width: droideka.size, height: droideka.size };
+                         if (rectIntersect(laserRect, droidekaRect)) {
+                             addExplosion(droideka.x, droideka.y);
+                             droidekas.splice(i, 1);
+                             lasers.splice(lIndex, 1);
+                             hitEnemy = true;
+                             break;
+                         }
+                     }
+                     if (hitEnemy) continue;
+
+                     // Check Tanks (Tanks are only hurt by lightsaber in this setup)
+                     // If you want lasers to damage tanks, add similar logic here, decreasing tank.health
+                 }
+            } // End laser loop
+
+            // --- Lightsaber Melee Collision ---
+            // Check direct lightsaber hits (especially for tanks)
+             players.forEach(player => {
+                 const lightsaberRect = {
+                     x: player.x + player.lightsaberOffset - player.lightsaberWidth / 2,
+                     y: player.y - player.lightsaberHeight / 2,
+                     width: player.lightsaberWidth,
+                     height: player.lightsaberHeight
+                 };
+
+                 const allEnemies = [...droids, ...droidekas, ...tanks];
+                 for (let i = allEnemies.length - 1; i >= 0; i--) {
+                     const enemy = allEnemies[i];
+                     // Need to determine original array for removal
+                     let enemyArray = null;
+                     if (droids.includes(enemy)) enemyArray = droids;
+                     else if (droidekas.includes(enemy)) enemyArray = droidekas;
+                     else if (tanks.includes(enemy)) enemyArray = tanks;
+
+                     if (enemy && enemyArray) { // Ensure enemy exists
+                         const enemyRect = { x: enemy.x - enemy.size / 2, y: enemy.y - enemy.size / 2, width: enemy.size, height: enemy.size };
+                         if (rectIntersect(enemyRect, lightsaberRect)) {
+                             addExplosion(enemy.x, enemy.y);
+                             // Find the actual index in the original array and remove
+                             const indexInOriginalArray = enemyArray.findIndex(e => e === enemy);
+                             if (indexInOriginalArray > -1) {
+                                 enemyArray.splice(indexInOriginalArray, 1);
+                             }
+                             player.lightsaberGlow = 5; // Visual feedback for melee hit
+                             // Note: Melee hits instantly destroy in this version.
+                             // No need to break here, as the enemy is removed, and the loop continues with the next enemy.
+                         }
+                     }
+                 }
+             }); // End players loop for melee collision
+        }
+
+
+        // --- Drawing Functions --- UPDATED for Sprites, Health Bars, and 2 Players
+
+        // --- NEW Helper: Draw Health Bar ---
+        function drawHealthBar(entity) {
+            if (!entity.alive || typeof entity.health === 'undefined' || typeof entity.maxHealth === 'undefined') return;
+
+            const barWidth = entity.size * 0.8; // Health bar width relative to sprite size
+            const barHeight = 5;
+            const barX = entity.x - barWidth / 2;
+            const barY = entity.y - entity.size / 2 - barHeight - 2; // Position above the sprite
+
+            const healthPercentage = entity.health / entity.maxHealth;
+
+            // Background of health bar (e.g., red)
+            ctx.fillStyle = "#8B0000"; // Dark Red
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+
+            // Foreground of health bar (e.g., green)
+            ctx.fillStyle = "#00FF00"; // Bright Green
+            ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
+
+            // Optional: Add a small border
+            ctx.strokeStyle = "#333333";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(barX, barY, barWidth, barHeight);
+        }
+
+        function drawPlayer(player) {
+             // Draw Player Sprite
+             if (player.playerSprite.complete && player.playerSprite.naturalWidth !== 0) { // Check if loaded
+                 ctx.drawImage(player.playerSprite, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
+             } else { // Fallback to rectangle if sprite not loaded
+                 ctx.fillStyle = player === player1 ? "blue" : "brown"; // Blue for Obi-Wan, Brown for Qui-Gon (or chose another color)
+                 ctx.fillRect(player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
+             }
+
+             // Draw Lightsaber (using sprite or fallback)
+             let saberX = player.x + player.lightsaberOffset - player.lightsaberWidth / 2;
+             let saberY = player.y - player.lightsaberHeight / 2;
+             if (player.saberSprite.complete && player.saberSprite.naturalWidth !== 0) {
+                 ctx.drawImage(player.saberSprite, saberX, saberY, player.lightsaberWidth, player.lightsaberHeight);
+             } else {
+                 ctx.fillStyle = player.saberColor;
+                 ctx.fillRect(saberX, saberY, player.lightsaberWidth, player.lightsaberHeight);
+             }
+
+             // Draw Lightsaber Glow effect (keep as is, maybe adjust size/position)
+             if (player.lightsaberGlow > 0) {
+                 ctx.strokeStyle = "white";
+                 ctx.lineWidth = Math.max(1, Math.min(4, player.lightsaberGlow / 3)); // Dynamic glow width
+                 ctx.globalAlpha = Math.min(1, player.lightsaberGlow / 10); // Dynamic glow opacity
+                 // Draw glow around the saber sprite/rectangle
+                 ctx.strokeRect(saberX - 2, saberY - 2, player.lightsaberWidth + 4, player.lightsaberHeight + 4);
+                 ctx.globalAlpha = 1; // Reset alpha
+                 player.lightsaberGlow--;
+             }
+         }
+
+        function drawPadme() {
+            if (padme.alive) {
+                if (sprites.padme.complete && sprites.padme.naturalWidth !== 0) {
+                    ctx.drawImage(sprites.padme, padme.x - padme.size / 2, padme.y - padme.size / 2, padme.size, padme.size);
+                } else { // Fallback
+                     ctx.fillStyle = "gold";
+                     ctx.fillRect(padme.x - padme.size / 2, padme.y - padme.size / 2, padme.size, padme.size);
+                 }
+                drawHealthBar(padme); // --- NEW: Draw health bar
+            } else {
+                // Keep Game Over message logic
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; // Slightly transparent white
+                ctx.font = "bold 30px Arial";
+                ctx.textAlign = "center"; // Center the text
+                ctx.fillText("GAME OVER!", canvas.width / 2, canvas.height / 2 - 20);
+                ctx.font = "20px Arial";
+                ctx.fillText("Padme has fallen...", canvas.width / 2, canvas.height / 2 + 10);
+                ctx.textAlign = "left"; // Reset alignment
+                // Restart button display is handled when health hits 0
+             }
+        }
+
+        function drawSoldiers() {
+            soldiers.forEach(soldier => {
+                if (soldier.alive) {
+                    if (sprites.soldier.complete && sprites.soldier.naturalWidth !== 0) {
+                        ctx.drawImage(sprites.soldier, soldier.x - soldier.size / 2, soldier.y - soldier.size / 2, soldier.size, soldier.size);
+                    } else { // Fallback
+                         ctx.fillStyle = "lime";
+                         ctx.fillRect(soldier.x - soldier.size / 2, soldier.y - soldier.size / 2, soldier.size, soldier.size);
+                     }
+                    drawHealthBar(soldier); // --- NEW: Draw health bar
+                }
+                 // Optionally draw dead soldiers differently or not at all
+             });
+        }
+
+        function drawDroids() {
+             droids.forEach(droid => {
+                 if (sprites.droid.complete && sprites.droid.naturalWidth !== 0) {
+                     ctx.drawImage(sprites.droid, droid.x - droid.size / 2, droid.y - droid.size / 2, droid.size, droid.size);
+                 } else { // Fallback
+                     ctx.fillStyle = "red";
+                     ctx.fillRect(droid.x - droid.size / 2, droid.y - droid.size / 2, droid.size, droid.size);
+                 }
+             });
+         }
+
+        function drawDroidekas() {
+             droidekas.forEach(droideka => {
+                 if (sprites.droideka.complete && sprites.droideka.naturalWidth !== 0) {
+                     ctx.drawImage(sprites.droideka, droideka.x - droideka.size / 2, droideka.y - droideka.size / 2, droideka.size, droideka.size);
+                 } else { // Fallback
+                     ctx.fillStyle = "darkred";
+                     ctx.fillRect(droideka.x - droideka.size / 2, droideka.y - droideka.size / 2, droideka.size, droideka.size);
+                 }
+             });
+         }
+
+        function drawTanks() {
+              tanks.forEach(tank => {
+                 if (sprites.tank.complete && sprites.tank.naturalWidth !== 0) {
+                     ctx.drawImage(sprites.tank, tank.x - tank.size / 2, tank.y - tank.size / 2, tank.size, tank.size);
+                 } else { // Fallback
+                     ctx.fillStyle = "darkgreen"; // Darker green for tanks
+                     ctx.fillRect(tank.x - tank.size / 2, tank.y - tank.size / 2, tank.size, tank.size);
+                 }
+                 // Optional: Draw Tank Health Bar if they can be damaged by lasers later
+                 // drawHealthBar(tank);
+             });
+         }
+
+        function drawLasers() {
+             lasers.forEach(laser => {
+                 // Use distinct colors based on origin
+                 if (laser.fromDroid) {
+                     ctx.fillStyle = "red";
+                 } else if (laser.fromSoldier) {
+                     ctx.fillStyle = "lime"; // Soldier shots
+                 } else {
+                     ctx.fillStyle = "cyan"; // Deflected shots
+                 }
+
+                 const laserWidth = laser.width || laser.size || 5;
+                 const laserHeight = laser.height || laser.size || 5;
+                 // Draw as small rectangles (or use laser sprites if you have them)
+                 ctx.fillRect(laser.x - laserWidth / 2, laser.y - laserHeight / 2, laserWidth, laserHeight);
+             });
+         }
+
+        // drawLevelMessage, drawLevel (Keep as is or update font/style)
+         function drawLevelMessage() {
+             if (Date.now() < levelMessageTime) {
+                 ctx.fillStyle = "white";
+                 ctx.font = "bold 40px Arial"; // Bolder font
+                 ctx.textAlign = "center";
+                  let opacity = Math.abs(Math.sin(Date.now() / 300)); // Slower pulse
+                 ctx.globalAlpha = opacity;
+                 ctx.fillText(`LEVEL ${level}!`, canvas.width / 2, canvas.height / 2); // Show level number
+                 ctx.globalAlpha = 1;
+                 ctx.textAlign = "left"; // Reset
+             }
+         }
+
+         function drawLevel() {
+             ctx.fillStyle = "white";
+             ctx.font = "20px Arial";
+             ctx.fillText("Level: " + level, 10, 30);
+         }
+
+        // Combined Draw Function
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // --- Draw background FIRST and apply darkening ---
+            if (sprites.background.complete && sprites.background.naturalWidth !== 0) {
+                ctx.drawImage(sprites.background, 0, 0, canvas.width, canvas.height);
+                // Apply a semi-transparent black overlay to darken the background
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // <--- ADJUST OPACITY (0.5 is 50% dark)
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+			} else {
+                // Fallback background color if image not loaded
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            drawPadme(); // Draw Padme (and check game over state implicitly)
+            drawSoldiers();
+            drawDroids();
+            drawDroidekas();
+            drawTanks();
+
+             // Draw both players
+             drawPlayer(player1);
+             drawPlayer(player2);
+
+            drawLasers();
+            drawExplosions(); // Draw explosions over everything else except UI
+
+            drawLevel(); // Draw level in corner
+            drawLevelMessage(); // Draw pulsing level message
+
+            // Note: Game Over text is handled within drawPadme when Padme is not alive.
+            // Restart button is handled via display: none/block in CSS.
+        }
+
+        // --- Game Loop ---
+        let lastTime = 0;
+        function gameLoop(time) {
+            if (!gameStarted) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            // Check if game is over
+            if (!padme.alive) {
+                // The game over message and restart button are handled in the draw function
+                 draw(); // Draw one final frame to show game over state
+                 return; // Stop the game loop
+            }
+
+            // --- Updates ---
+             movePlayers();
+            movePadme();
+             moveSoldiers(time); // Pass current time for shooting timer
+            moveDroids();
+            moveDroidekas();
+            moveTanks();
+            moveLasers();
+            updateExplosions();
+
+            // --- Spawning Enemies ---
+            const currentTime = Date.now();
+            if (currentTime - lastDroidSpawn > droidSpawnRate) {
+                spawnDroid();
+                lastDroidSpawn = currentTime;
+            }
+             if (level >= 2 && currentTime - lastDroidekaSpawn > droidekaSpawnRate) {
+                 spawnDroideka();
+                 lastDroidekaSpawn = currentTime;
+             }
+             if (level >= 3 && currentTime - lastTankSpawn > tankSpawnRate) {
+                 spawnTank();
+                 lastTankSpawn = currentTime;
+             }
+
+
+            // --- Drawing ---
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Game Start and Restart ---
+        function startGame() {
+			// Use waitForAssets before actually starting the game loop
+            waitForAssets(() => { // <--- ADD THIS LINE AND THE CLOSING BRACE BELOW
+				gameStarted = true;
+				instructionsOverlay.style.display = 'none'; // Hide instructions
+
+				// Reset game state
+				level = 1;
+				padme.alive = true;
+				padme.health = padme.maxHealth; // Reset Padme's health
+				padme.baseX = 50; // Reset Padme's position
+				padme.speed = 1.5; // Reset Padme's speed
+				 player1.x = canvas.width / 2 - 100; // Reset player positions
+				 player1.y = canvas.height / 2;
+				 player2.x = canvas.width / 2 + 100;
+				 player2.y = canvas.height / 2;
+				 player1.lightsaberGlow = 0; // Reset glow
+				 player2.lightsaberGlow = 0;
+				 initializeSoldiers(); // Re-initialize soldiers
+				droids.length = 0; // Clear enemies
+				droidekas.length = 0;
+				tanks.length = 0;
+				lasers.length = 0; // Clear lasers
+				explosions.length = 0; // Clear explosions
+				droidSpawnRate = 3000; // Reset spawn rates
+				droidekaSpawnRate = 7000;
+				tankSpawnRate = 10000;
+				lastDroidSpawn = Date.now();
+				lastDroidekaSpawn = Date.now();
+				lastTankSpawn = Date.now();
+				levelMessageTime = 0; // Clear level message
+				restartButton.style.display = 'none'; // Hide restart button
+
+
+				gameStartTime = Date.now();
+				lastTime = performance.now(); // Initialize lastTime for delta timing
+				requestAnimationFrame(gameLoop); // Start the game loop
+			});
+        }
+
+        function restartGame() {
+            startGame(); // Restart is just starting a new game
+        }
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', restartGame);
+
+
+        // Initial resize and draw the starting screen
+        resizeCanvas();
+        // Draw the initial state (will show the instructions overlay)
+        // No need to call draw() explicitly here, the instructions overlay covers it.
+        // The first draw happens when the gameLoop starts after the button click.
+
+    </script>
+</body>
+</html>

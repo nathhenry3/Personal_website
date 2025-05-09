@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulation Hub</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      margin: 2em;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 1em;
+    }
+    a {
+      text-decoration: none;
+      color: #0366d6;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #search {
+      margin-bottom: 1em;
+      padding: 0.5em;
+      font-size: 1em;
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulation Hub</h1>
+  
+  <p>This page contains a number of simulations I've been working on to explain my research more easily. All of these are works in progress.</p>
+
+  <input type="text" id="search" placeholder="Search files..." oninput="filterLinks()">
+
+  <ul id="file-list">
+    <li>
+      <details open>
+        <summary>Diffusion modelling</summary>
+        <ul>
+          <li>
+            <details open>
+              <summary>Interactive test tube model</summary>
+              <ul>
+                <li><a href="Diffusion modelling/Interactive test tube model/interactive_test_tube.html" target="_blank">interactive_test_tube.html</a></li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details open>
+              <summary>Neuronal diffusion model</summary>
+              <ul>
+                <li><a href="Diffusion modelling/Neuronal diffusion model/neuronal_sim v1.html" target="_blank">neuronal_sim v1.html</a></li>
+                <li><a href="Diffusion modelling/Neuronal diffusion model/neuronal_sim v1.1.html" target="_blank">neuronal_sim v1.1.html</a></li>
+                <li><a href="Diffusion modelling/Neuronal diffusion model/neuronal_sim v1.2 opponent processes wtih depletion.html" target="_blank">neuronal_sim v1.2 opponent processes wtih depletion.html</a></li>
+                <li><a href="Diffusion modelling/Neuronal diffusion model/neuronal_sim v1.3 opponent processes with no depletion.html" target="_blank">neuronal_sim v1.3 opponent processes with no depletion.html</a></li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details open>
+              <summary>Populations of neurons</summary>
+              <ul>
+                <li><a href="Diffusion modelling/Populations of neurons/neuron_populations v1.0 10 neurons.html" target="_blank">neuron_populations v1.0 10 neurons.html</a></li>
+                <li><a href="Diffusion modelling/Populations of neurons/neuron_populations v1.1 100 neurons.html" target="_blank">neuron_populations v1.1 100 neurons.html</a></li>
+                <li><a href="Diffusion modelling/Populations of neurons/neuron_populations v1.2 1000 neurons.html" target="_blank">neuron_populations v1.2 1000 neurons.html</a></li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details open>
+              <summary>Wald diffusion model</summary>
+              <ul>
+                <li><a href="Diffusion modelling/Wald diffusion model/index.html" target="_blank">index.html</a></li>
+              </ul>
+            </details>
+          </li>
+		  <li>
+            <details open>
+              <summary>Opponent process theory</summary>
+              <ul>
+                <li><a href="Opponent process theory/opponent_process.html" target="_blank">opponent_process.html</a></li>
+              </ul>
+            </details>
+          </li>
+        </ul>
+      </details>
+    </li>
+    <li>
+      <details open>
+        <summary>ObiWan</summary>
+        <ul>
+          <li><a href="ObiWan/obi_wan - v1.1.html" target="_blank">obi_wan - v1.1.html</a></li>
+          <li><a href="ObiWan/obi_wan v1.0 single player.html" target="_blank">obi_wan v1.0 single player.html</a></li>
+        </ul>
+      </details>
+    </li>
+  </ul>
+
+  <script>
+    function filterLinks() {
+      const keyword = document.getElementById('search').value.toLowerCase();
+      const links = document.querySelectorAll('#file-list a');
+
+      links.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        const match = text.includes(keyword);
+        link.parentElement.style.display = match ? '' : 'none';
+
+        const details = link.closest('details');
+        if (details) {
+          const visibleLinks = details.querySelectorAll('li:not([style*="display: none"]) a');
+          details.style.display = visibleLinks.length > 0 ? '' : 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

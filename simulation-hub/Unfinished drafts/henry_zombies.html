@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zombie FPS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        let scene, camera, renderer, player;
+        let zombies = [], bullets = [], obstacles = [];
+        let keys = {};
+        let mouseX = 0, mouseY = 0;
+        
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 10);
+            
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            
+            let floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(100, 100),
+                new THREE.MeshBasicMaterial({ color: 0x111111 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+            
+            player = new THREE.Object3D();
+            player.position.set(0, 2, 0);
+            scene.add(player);
+            player.add(camera);
+            
+            spawnZombies();
+            createObstacles();
+            animate();
+        }
+        
+        function spawnZombies() {
+            for (let i = 0; i < 5; i++) {
+                createZombie();
+            }
+        }
+        
+        function createZombie() {
+            let isFast = Math.random() < 0.3;
+            let zombie = new THREE.Mesh(
+                new THREE.BoxGeometry(1, 2.5, 1),
+                new THREE.MeshBasicMaterial({ color: 0x000000 })
+            );
+            
+            let eyes = new THREE.Group();
+            for (let i = -1; i <= 1; i += 2) {
+                let eye = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.3, 0.15, 0.05),
+                    new THREE.MeshBasicMaterial({ color: isFast ? 0x0000ff : 0xff0000 })
+                );
+                eye.position.set(i * 0.3, 1, 0.55);
+                eyes.add(eye);
+            }
+            zombie.add(eyes);
+            
+            let mouth = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.15, 0.05),
+                new THREE.MeshBasicMaterial({ color: 0x222222 })
+            );
+            mouth.position.set(0, 0.6, 0.55);
+            zombie.add(mouth);
+            
+            zombie.position.set(Math.random() * 40 - 20, 1.25, -Math.random() * 40 - 10);
+            zombie.isFast = isFast;
+            scene.add(zombie);
+            zombies.push(zombie);
+        }
+        
+        function createObstacles() {
+            for (let i = 0; i < 5; i++) {
+                let obstacle = new THREE.Mesh(
+                    new THREE.BoxGeometry(3, 3, 3),
+                    new THREE.MeshBasicMaterial({ color: 0x333333 })
+                );
+                obstacle.position.set(Math.random() * 20 - 10, 1.5, -Math.random() * 20 - 5);
+                scene.add(obstacle);
+                obstacles.push(obstacle);
+            }
+        }
+        
+        function shoot() {
+            let bullet = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 0.1, 1),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            bullet.position.copy(player.position);
+            scene.add(bullet);
+            bullets.push(bullet);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            bullets.forEach((bullet, index) => {
+                bullet.position.z -= 0.5;
+                if (bullet.position.z < -50) {
+                    scene.remove(bullet);
+                    bullets.splice(index, 1);
+                }
+            });
+            
+            zombies.forEach((zombie, index) => {
+                let speed = zombie.isFast ? 0.08 : 0.05;
+                let dx = player.position.x - zombie.position.x;
+                let dz = player.position.z - zombie.position.z;
+                let distance = Math.sqrt(dx * dx + dz * dz);
+                if (distance > 1) {
+                    zombie.position.x += (dx / distance) * speed * (Math.random() < 0.8 ? 1 : -1);
+                    zombie.position.z += (dz / distance) * speed * (Math.random() < 0.8 ? 1 : -1);
+                }
+                
+                obstacles.forEach(obstacle => {
+                    if (zombie.position.distanceTo(obstacle.position) < 2) {
+                        zombie.position.x -= (dx / distance) * speed;
+                        zombie.position.z -= (dz / distance) * speed;
+                    }
+                });
+                
+                if (zombie.position.distanceTo(player.position) < 1) {
+                    alert("Game Over!");
+                    window.location.reload();
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        function movePlayer() {
+            if (keys["ArrowUp"]) player.position.z -= 0.2;
+            if (keys["ArrowDown"]) player.position.z += 0.2;
+            if (keys["ArrowLeft"]) player.position.x -= 0.2;
+            if (keys["ArrowRight"]) player.position.x += 0.2;
+        }
+        
+        window.addEventListener("click", shoot);
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+        
+        window.addEventListener("mousemove", (e) => {
+            let deltaX = e.movementX * 0.002;
+            player.rotation.y -= deltaX;
+        });
+        
+        window.addEventListener("resize", () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+        
+        init();
+        setInterval(movePlayer, 10);
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point Diffusion Simulation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+        #simulationContainer, #chartContainer {
+            margin: 15px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #simulationCanvas {
+            border: 1px solid black;
+            background-color: #e0e0e0; /* Lighter background for canvas */
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Point Diffusion Simulation</h1>
+
+    <div id="simulationContainer">
+        <h2>Simulation Area</h2>
+        <canvas id="simulationCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <div id="chartContainer">
+         <h2>Hits vs. Time</h2>
+         <canvas id="hitChart" width="600" height="300"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="diffusion.js"></script>
+
+</body>
+</html>

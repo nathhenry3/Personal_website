@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synaptic Diffusion Simulation</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
+    canvas { border: 1px solid #ccc; margin: 10px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="simulationCanvas" width="800" height="400"></canvas>
+  <canvas id="apChart" width="800" height="200"></canvas>
+  <script>
+    // Define vertical synaptic corridors
+    const synapses = [
+      { id: 'A', x: 150, width: 50, height: 300, yStart: 50 },
+      { id: 'B', x: 350, width: 50, height: 250, yStart: 50 },
+      { id: 'C', x: 550, width: 50, height: 200, yStart: 50 }
+    ];
+
+    const PARTICLES = 500;
+    const STEP_SIZE = 50;
+    // AP waveform with depolarization and hyperpolarization
+    const AP_WAVEFORM = [0, 60, 120, 60, 0, -5, -10, -15, -17, -14, -11, -8, -5, -2, 0];
+
+    class Molecule {
+      constructor(synapse) {
+        this.syn = synapse;
+        this.respawn();
+      }
+      respawn() {
+        this.x = this.syn.x + Math.random() * this.syn.width;
+        this.y = this.syn.yStart;
+      }
+      step() {
+        // true random walk
+        const angle = Math.random() * 2 * Math.PI;
+        const nx = this.x + STEP_SIZE * Math.cos(angle);
+        const ny = this.y + STEP_SIZE * Math.sin(angle);
+        // clamp horizontal position within corridor
+        this.x = Math.min(Math.max(nx, this.syn.x), this.syn.x + this.syn.width);
+        // update vertical position, allow passage beyond bottom but not above top
+        this.y = ny < this.syn.yStart ? this.syn.yStart : ny;
+      }
+      atEnd() {
+        return this.y >= this.syn.yStart + this.syn.height;
+      }
+    }
+
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+    const apCtx = document.getElementById('apChart').getContext('2d');
+
+    // initialize molecules and AP queues
+    const molecules = [];
+    const apQueues = synapses.map(() => []);
+    synapses.forEach((s) => {
+      for (let j = 0; j < PARTICLES; j++) {
+        molecules.push(new Molecule(s));
+      }
+    });
+
+    // setup Chart.js for AP waveform
+    const apChart = new Chart(apCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: synapses.map(s => ({ label: `Synapse ${s.id}`, data: [], borderWidth: 1, fill: false }))
+      },
+      options: {
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Time (steps)' } },
+          y: { title: { display: true, text: 'Voltage (mV)' } }
+        }
+      }
+    });
+
+    let stepCount = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // draw corridors
+      synapses.forEach(s => {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(s.x, s.yStart, s.width, s.height);
+      });
+
+      // move molecules and trigger APs
+      molecules.forEach(m => {
+        m.step();
+        if (m.atEnd()) {
+          const idx = synapses.indexOf(m.syn);
+          apQueues[idx].push([...AP_WAVEFORM]);
+          m.respawn();
+        }
+        ctx.fillStyle = '#007bff';
+        ctx.fillRect(m.x - 2, m.y - 2, 4, 4);
+      });
+
+      stepCount++;
+      if (stepCount % 20 === 0) {
+        apChart.data.labels.push(stepCount);
+        apChart.data.datasets.forEach((ds, i) => {
+          let vSum = 0;
+          apQueues[i] = apQueues[i].filter(wave => {
+            vSum += wave.shift();
+            return wave.length > 0;
+          });
+          ds.data.push(vSum);
+        });
+        apChart.update();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

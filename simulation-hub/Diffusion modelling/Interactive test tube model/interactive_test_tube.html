@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Diffusion Model</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #controls { margin-bottom: 15px; }
+    #controls label { margin-right: 15px; }
+    #simulationCanvas { border: 1px solid #888; background-color: #eef; display: block; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>
+      Test Tube Length (units):
+      <input type="number" id="tubeLength" value="100" min="10" />
+    </label>
+    <label>
+      Diffusion Rate (units/tick):
+      <input type="number" id="diffusionRate" value="1" step="0.1" min="0.1" />
+    </label>
+    <label>
+      Starting Molecules:
+      <input type="number" id="numMolecules" value="200" min="1" />
+    </label>
+    <button id="startStopBtn">Start</button>
+  </div>
+
+  <canvas id="simulationCanvas" width="200" height="400"></canvas>
+  <canvas id="graphCanvas" width="400" height="200"></canvas>
+
+  <script>
+    const simCanvas = document.getElementById('simulationCanvas');
+    const simCtx = simCanvas.getContext('2d');
+    const graphCanvas = document.getElementById('graphCanvas');
+    let molecules = [];
+    let outsideMolecules = [];
+    let initialCount = 0;
+    let escapedCount = 0;
+    let stepCounter = 0;
+    let simInterval = null;
+    let chart = null;
+
+    function initSim() {
+      const L = parseFloat(document.getElementById('tubeLength').value);
+      const D = parseFloat(document.getElementById('diffusionRate').value);
+      const N = parseInt(document.getElementById('numMolecules').value, 10);
+
+      molecules = new Array(N).fill(0);
+      outsideMolecules = [];
+      initialCount = N;
+      escapedCount = 0;
+      stepCounter = 0;
+
+      // Reset chart
+      if (chart) {
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.update();
+      } else {
+        chart = new Chart(graphCanvas, {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: '% Escaped', data: [], fill: false, borderWidth: 2 }] },
+          options: {
+            animation: false,
+            scales: {
+              x: { title: { display: true, text: 'Step' } },
+              y: { title: { display: true, text: '% Escaped' }, beginAtZero: true, max: 100 }
+            }
+          }
+        });
+      }
+
+      if (!simInterval) {
+        simInterval = setInterval(() => simLoop(D, L), 50);
+        document.getElementById('startStopBtn').textContent = 'Stop';
+      }
+    }
+
+    function simLoop(diffusionRate, tubeLength) {
+      update(diffusionRate, tubeLength);
+      draw(tubeLength);
+    }
+
+    function update(diffusionRate, tubeLength) {
+      stepCounter++;
+      const newInside = [];
+      molecules.forEach(pos => {
+        let step = (Math.random() - 0.5) * 2 * diffusionRate;
+        let newPos = pos + step;
+        if (newPos < 0) newPos = 0;
+        if (newPos >= tubeLength) {
+          escapedCount++;
+          // spawn outside molecule
+          const left = 20;
+          const right = simCanvas.width - 20;
+          const spawnX = (left + right) / 2 + (Math.random() - 0.5) * (right - left - 10);
+          outsideMolecules.push({
+            x: spawnX,
+            y: 10,
+            vx: (Math.random() - 0.5) * 2 * diffusionRate,
+            vy: (Math.random() - 0.5) * 2 * diffusionRate
+          });
+        } else {
+          newInside.push(newPos);
+        }
+      });
+      molecules = newInside;
+
+      // update outside molecules with bouncing
+      outsideMolecules.forEach(m => {
+        m.x += m.vx;
+        m.y += m.vy;
+        if (m.x <= 5) { m.x = 5; m.vx *= -1; }
+        if (m.x >= simCanvas.width - 5) { m.x = simCanvas.width - 5; m.vx *= -1; }
+        if (m.y <= 5) { m.y = 5; m.vy *= -1; }
+        if (m.y >= simCanvas.height - 5) { m.y = simCanvas.height - 5; m.vy *= -1; }
+      });
+
+      const percent = (escapedCount / initialCount * 100).toFixed(2);
+      chart.data.labels.push(stepCounter);
+      chart.data.datasets[0].data.push(percent);
+      chart.update();
+    }
+
+    function draw(tubeLength) {
+      const w = simCanvas.width;
+      const h = simCanvas.height;
+      simCtx.clearRect(0, 0, w, h);
+
+      // Draw realistic tube (rounded bottom)
+      const left = 20;
+      const right = w - 20;
+      const top = 10;
+      const bottom = h - 10;
+      const radius = (right - left) / 2;
+      simCtx.beginPath();
+      simCtx.moveTo(left, top);
+      simCtx.lineTo(left, bottom - radius);
+      simCtx.arc(w/2, bottom - radius, radius, Math.PI, 0, false);
+      simCtx.lineTo(right, top);
+      simCtx.closePath();
+      simCtx.strokeStyle = '#444';
+      simCtx.lineWidth = 3;
+      simCtx.stroke();
+      simCtx.fillStyle = 'rgba(255,255,255,0.6)';
+      simCtx.fill();
+
+      const scale = (h - 20) / tubeLength;
+      // Draw inside molecules
+      molecules.forEach(pos => {
+        const x = w/2 + (Math.random() - 0.5) * (right - left) * 0.2;
+        const y = h - 10 - pos * scale;
+        simCtx.beginPath();
+        simCtx.arc(x, y, 3, 0, 2 * Math.PI);
+        simCtx.fillStyle = '#007bff';
+        simCtx.fill();
+      });
+
+      // Draw outside molecules bouncing
+      outsideMolecules.forEach(m => {
+        simCtx.beginPath();
+        simCtx.arc(m.x, m.y, 3, 0, 2 * Math.PI);
+        simCtx.fillStyle = '#e74c3c';
+        simCtx.fill();
+      });
+    }
+
+    document.getElementById('startStopBtn').addEventListener('click', () => {
+      if (simInterval) {
+        clearInterval(simInterval);
+        simInterval = null;
+        document.getElementById('startStopBtn').textContent = 'Start';
+      } else {
+        initSim();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point Diffusion Simulation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+        #simulationContainer, .chartContainer { /* Use class for chart containers */
+            margin: 15px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chartContainer {
+            margin-top: 0; /* Reduce top margin for stacked charts */
+        }
+        #simulationCanvas {
+            border: 1px solid black;
+            background-color: #e0e0e0; /* Lighter background for canvas */
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Point Diffusion Simulation</h1>
+
+    <div id="simulationContainer">
+        <h2>Simulation Area</h2>
+        <canvas id="simulationCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <!-- Container for CDF Chart -->
+    <div id="cdfChartContainer" class="chartContainer">
+         <h2>Cumulative Hits vs. Time (CDF)</h2> <!-- Updated title -->
+         <canvas id="cdfChart" width="600" height="300"></canvas> <!-- Updated ID -->
+    </div>
+
+    <!-- Container for PDF/Histogram Chart -->
+    <div id="pdfChartContainer" class="chartContainer">
+         <h2>Hit Rate vs. Time (Histogram)</h2> <!-- New title -->
+         <canvas id="pdfChart" width="600" height="300"></canvas> <!-- New ID -->
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="diffusion.js"></script>
+
+</body>
+</html>

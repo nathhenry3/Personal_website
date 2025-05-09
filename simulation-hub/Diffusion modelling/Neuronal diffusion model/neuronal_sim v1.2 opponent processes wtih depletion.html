@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synaptic Diffusion Simulation</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
+    canvas { border: 1px solid #ccc; margin: 10px; }
+    #toggleGates { margin: 10px; padding: 5px 10px; font-size: 16px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Button to toggle gates on/off -->
+  <button id="toggleGates">Gates: ON</button>
+
+  <canvas id="simulationCanvas" width="800" height="400"></canvas>
+  <canvas id="apChart" width="800" height="200"></canvas>
+
+  <script>
+    // Define vertical synaptic corridors
+    const synapses = [
+      { id: 'A', x: 150, width: 50, height: 300, yStart: 50 },
+      { id: 'B', x: 350, width: 50, height: 200, yStart: 50 },
+      { id: 'C', x: 550, width: 50, height: 100, yStart: 50 }
+    ];
+
+    const PARTICLES = 20000;
+    const STEP_SIZE = 10;
+    // AP waveform with depolarization and hyperpolarization
+    const AP_WAVEFORM = [0, 120, 0, -10, -15, -17, -14, -10, -5, 0];
+
+    // Gate control flag
+    let gatesOn = true;
+    const toggleBtn = document.getElementById('toggleGates');
+    toggleBtn.addEventListener('click', () => {
+      gatesOn = !gatesOn;
+      toggleBtn.textContent = `Gates: ${gatesOn ? 'ON' : 'OFF'}`;
+    });
+
+    class Molecule {
+      constructor(synapse) {
+        this.syn = synapse;
+        this.x = synapse.x + Math.random() * synapse.width;
+        this.y = synapse.yStart;
+      }
+      step() {
+        const angle = Math.random() * 2 * Math.PI;
+        const nx = this.x + STEP_SIZE * Math.cos(angle);
+        const ny = this.y + STEP_SIZE * Math.sin(angle);
+        this.x = Math.min(Math.max(nx, this.syn.x), this.syn.x + this.syn.width);
+        this.y = ny < this.syn.yStart ? this.syn.yStart : ny;
+      }
+      atEnd() {
+        return this.y >= this.syn.yStart + this.syn.height;
+      }
+    }
+
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+    const apCtx = document.getElementById('apChart').getContext('2d');
+
+    // initialize molecules and AP queues
+    let molecules = [];
+    const apQueues = synapses.map(() => []);
+    synapses.forEach(s => {
+      for (let j = 0; j < PARTICLES; j++) {
+        molecules.push(new Molecule(s));
+      }
+    });
+
+    // setup Chart.js for AP waveform
+    const apChart = new Chart(apCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: synapses.map(s => ({ label: `Synapse ${s.id}`, data: [], borderWidth: 1, fill: false }))
+      },
+      options: {
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Time (steps)' } },
+          y: { title: { display: true, text: 'Voltage (mV)' } }
+        }
+      }
+    });
+
+    let stepCount = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // draw corridors
+      synapses.forEach(s => {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(s.x, s.yStart, s.width, s.height);
+      });
+
+      // move molecules and trigger APs, remove on exit
+      for (let i = molecules.length - 1; i >= 0; i--) {
+        const m = molecules[i];
+        m.step();
+        if (m.atEnd()) {
+          const idx = synapses.indexOf(m.syn);
+          // only push AP if gates are on
+          if (gatesOn) {
+            apQueues[idx].push([...AP_WAVEFORM]);
+          }
+          molecules.splice(i, 1);
+        } else {
+          ctx.fillStyle = '#007bff';
+          ctx.fillRect(m.x - 2, m.y - 2, 4, 4);
+        }
+      }
+
+      // update AP chart periodically
+      if (molecules.length > 0) {
+        stepCount++;
+        if (stepCount % 20 === 0) {
+          apChart.data.labels.push(stepCount);
+          apChart.data.datasets.forEach((ds, i) => {
+            let vSum = 0;
+            apQueues[i] = apQueues[i].filter(wave => {
+              vSum += wave.shift();
+              return wave.length > 0;
+            });
+            ds.data.push(vSum);
+          });
+          apChart.update();
+        }
+        requestAnimationFrame(animate);
+      } else {
+        // simulation complete
+        ctx.fillStyle = 'red';
+        ctx.font = '24px sans-serif';
+        ctx.fillText('Simulation complete', canvas.width / 2 - 100, canvas.height / 2);
+      }
+    }
+    animate();
+  </script>
+</body>
+</html>

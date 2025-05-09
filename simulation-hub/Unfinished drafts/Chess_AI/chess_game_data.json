@@ -1,0 +1,271 @@
+[
+  {
+    "moves": [
+      {
+        "state": "44f946930f651008a52b330bebb3a6e3",
+        "move": "from24_to34",
+        "color": "w"
+      },
+      {
+        "state": "ba6c58232ea4f487145c6f6ae3181e73",
+        "move": "from71_to61",
+        "color": "b"
+      },
+      {
+        "state": "44a5f8e9be1f4e2c1963d48c9b326af8",
+        "move": "from14_to24",
+        "color": "w"
+      },
+      {
+        "state": "a9963e2e639956bf0464d738b22002e3",
+        "move": "from61_to51",
+        "color": "b"
+      },
+      {
+        "state": "e1ab629e52c2c11c0c9ba52b068b1fdb",
+        "move": "from21_to31",
+        "color": "w"
+      },
+      {
+        "state": "dbb1ddbc51998145ab1df7f1d85e0fb1",
+        "move": "from74_to64",
+        "color": "b"
+      },
+      {
+        "state": "7d5a6e52c4c602ea90f72dc13dbf2f2f",
+        "move": "from11_to21",
+        "color": "w"
+      },
+      {
+        "state": "f03ff2494c3691e8575570c9f68897cb",
+        "move": "from51_to41",
+        "color": "b"
+      },
+      {
+        "state": "ec3c14c57b668b9a7f5f8525c9f59ca9",
+        "move": "from22_to32",
+        "color": "w"
+      },
+      {
+        "state": "ab8d1a623766f4ea6f86343c5cee04b2",
+        "move": "from64_to54",
+        "color": "b"
+      },
+      {
+        "state": "84fcaa21a660ef2d8e2ce4f638f11213",
+        "move": "from12_to22",
+        "color": "w"
+      },
+      {
+        "state": "2c1cb46069551dfc0d95491241dcf380",
+        "move": "from54_to44",
+        "color": "b"
+      },
+      {
+        "state": "24c6bf5f371752123cfc61f4fbf0397d",
+        "move": "from23_to33",
+        "color": "w"
+      },
+      {
+        "state": "c4a364e5622d50b20f4ff13a2dd5cbe0",
+        "move": "from72_to62",
+        "color": "b"
+      },
+      {
+        "state": "5916056ec06ee148078b1034c518eebf",
+        "move": "from13_to23",
+        "color": "w"
+      },
+      {
+        "state": "963c807fbdb08d08a11bc01223209ef1",
+        "move": "from62_to52",
+        "color": "b"
+      },
+      {
+        "state": "e4e7abd67fd36b47f54307d1bbf88705",
+        "move": "from25_to35",
+        "color": "w"
+      },
+      {
+        "state": "a84528f8bf8a8d94523cc4d8ed1ed779",
+        "move": "from52_to42",
+        "color": "b"
+      },
+      {
+        "state": "c04812a7215cb6927a8c84cb468664c4",
+        "move": "from15_to25",
+        "color": "w"
+      },
+      {
+        "state": "2bd54dbafd36f24937aaea1b80f7d910",
+        "move": "from73_to63",
+        "color": "b"
+      },
+      {
+        "state": "426b1cc36cdea9a0609908c427c857a9",
+        "move": "from35_to45",
+        "color": "w"
+      },
+      {
+        "state": "3184f497ce993d312fbca9fec8f4182c",
+        "move": "from63_to53",
+        "color": "b"
+      },
+      {
+        "state": "2aeedb131ab92c3822af5f0a6c71d5ab",
+        "move": "from25_to35",
+        "color": "w"
+      },
+      {
+        "state": "cd6b928d3be85133d20ed3a538e9864c",
+        "move": "from53_to43",
+        "color": "b"
+      },
+      {
+        "state": "0ea373acdc7b03d0158e5eea29ebd3c8",
+        "move": "from26_to36",
+        "color": "w"
+      },
+      {
+        "state": "3e44415a136a47cef5501972b2b19672",
+        "move": "from75_to65",
+        "color": "b"
+      },
+      {
+        "state": "455324b36e485978faba83e35bcfa90b",
+        "move": "from45_to55",
+        "color": "w"
+      },
+      {
+        "state": "bd89dcc1590c72c610826f6706116c03",
+        "move": "from76_to66",
+        "color": "b"
+      },
+      {
+        "state": "a4e8474be59ae36c0a7be70340fdc19d",
+        "move": "from16_to26",
+        "color": "w"
+      },
+      {
+        "state": "82a4d1f609031fad84968ca38d1acc99",
+        "move": "from66_to56",
+        "color": "b"
+      },
+      {
+        "state": "3ed04c99bfde85074237fb484ba2ce6a",
+        "move": "from27_to37",
+        "color": "w"
+      },
+      {
+        "state": "1f3a44f4f05d8f0d9ef15ab84ac7f369",
+        "move": "from56_to46",
+        "color": "b"
+      },
+      {
+        "state": "b6769288a8bcff12c50295f68e486870",
+        "move": "from17_to27",
+        "color": "w"
+      },
+      {
+        "state": "b3ae9d8348cf4dcf43a0e1a7b35b0e09",
+        "move": "from77_to67",
+        "color": "b"
+      },
+      {
+        "state": "23b5913f057ed93e040df2abdbc9b86e",
+        "move": "from28_to38",
+        "color": "w"
+      },
+      {
+        "state": "b3f455ade4a1b6bcbc80dea972ac6568",
+        "move": "from84_to74",
+        "color": "b"
+      },
+      {
+        "state": "2af750728a3f26125220324cdf5b80dd",
+        "move": "from18_to28",
+        "color": "w"
+      },
+      {
+        "state": "144e043e55743d66cdf110b17760b4c3",
+        "move": "from67_to57",
+        "color": "b"
+      },
+      {
+        "state": "9574a91cad6f89b78ed85b2cb222a68f",
+        "move": "from35_to45",
+        "color": "w"
+      },
+      {
+        "state": "bd19d9383fee26a24eacfe3cda660c23",
+        "move": "from86_to76",
+        "color": "b"
+      },
+      {
+        "state": "700eb712474307de1d38ec08a6618030",
+        "move": "from37_to47",
+        "color": "w"
+      },
+      {
+        "state": "8d811318f1245555686d57460b45ea58",
+        "move": "from74_to64",
+        "color": "b"
+      },
+      {
+        "state": "9baa7751134c52ceb51dab86baeee155",
+        "move": "from27_to37",
+        "color": "w"
+      },
+      {
+        "state": "1d53445a608197e0efa0799ee87ef5f7",
+        "move": "from64_to54",
+        "color": "b"
+      },
+      {
+        "state": "2bbccef72dab201e5224285f99aef5ae",
+        "move": "from38_to48",
+        "color": "w"
+      },
+      {
+        "state": "c0afcce686aaa356ad49c9f9c10bcf58",
+        "move": "from76_to66",
+        "color": "b"
+      },
+      {
+        "state": "96c851f72321dad0defb9c217e7a2485",
+        "move": "from28_to38",
+        "color": "w"
+      },
+      {
+        "state": "33a33fe9a9109620a9febfe98bfcdc6c",
+        "move": "from66_to56",
+        "color": "b"
+      },
+      {
+        "state": "a6b92193674b1c4491fdbfe27bdb9cae",
+        "move": "from48_to58",
+        "color": "w"
+      },
+      {
+        "state": "155f2a9f19a7784fac6de9e0569de725",
+        "move": "from78_to68",
+        "color": "b"
+      },
+      {
+        "state": "1d47d91f8018aa505adf6f4d0ac4726f",
+        "move": "from38_to48",
+        "color": "w"
+      },
+      {
+        "state": "f7a2de8992d76adbb17cc69fac42f27c",
+        "move": "from81_to71",
+        "color": "b"
+      }
+    ],
+    "outcome": {
+      "w": 0,
+      "b": 0
+    },
+    "moves_count": 52
+  }
+]
