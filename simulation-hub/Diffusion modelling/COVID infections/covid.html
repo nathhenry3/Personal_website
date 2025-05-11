@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COVID-19 Diffusion Model Simulation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #controls { margin-bottom: 10px; }
+    canvas { border: 1px solid #ccc; display: block; margin-bottom: 20px; }
+    input { margin-right: 10px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>COVID-19 Diffusion Model Simulation</h2>
+  <div id="controls">
+    <label>People: <input type="number" id="numAgents" min="10" max="10000" value="1000"></label>
+    <label>Initial Infected: <input type="number" id="initialInfected" min="1" value="20"></label>
+    <label>Diffusion Speed: <input type="range" id="speedSlider" min="0.1" max="10" step="0.1" value="1"></label>
+    <button id="startBtn">Start</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <canvas id="simulationCanvas" width="600" height="400"></canvas>
+  <canvas id="interactionsChart" width="600" height="200"></canvas>
+  <canvas id="infectedChart" width="600" height="200"></canvas>
+
+  <script>
+    let agents = [], interactionsData = [], infectedData = [];
+    let timeStep = 0, running = false;
+    let interactionsChart, infectedChart;
+    const R = 8, RECOVERY_DAYS = 7;
+
+    class Agent {
+      constructor(w, h) {
+        this.x = Math.random()*w; this.y = Math.random()*h;
+        this.vx = (Math.random()-0.5)*2; this.vy = (Math.random()-0.5)*2;
+        this.infected = false; this.daysInfected = 0;
+      }
+      move(speed,w,h){
+        this.x+=this.vx*speed; this.y+=this.vy*speed;
+        if(this.x<0||this.x>w) this.vx*=-1;
+        if(this.y<0||this.y>h) this.vy*=-1;
+      }
+      updateInfection(delta){
+        if(this.infected){ this.daysInfected+=delta;
+          if(this.daysInfected>=RECOVERY_DAYS){ this.infected=false; this.daysInfected=0; }
+        }
+      }
+    }
+
+    function init(){
+      const simCanvas=document.getElementById('simulationCanvas');
+      const ctx=simCanvas.getContext('2d');
+      const w=simCanvas.width, h=simCanvas.height;
+      const N=parseInt(document.getElementById('numAgents').value,10);
+      const initInf=Math.min(parseInt(document.getElementById('initialInfected').value,10), N-1);
+
+      agents=[];
+      for(let i=0;i<N;i++) agents.push(new Agent(w,h));
+      for(let i=0;i<initInf;i++){ agents[i].infected=true; agents[i].daysInfected=0; }
+
+      interactionsData=[]; infectedData=[]; timeStep=0; running=false;
+
+      // Destroy previous charts if exist
+      if(interactionsChart) interactionsChart.destroy();
+      if(infectedChart) infectedChart.destroy();
+
+      const iCtx=document.getElementById('interactionsChart').getContext('2d');
+      const eCtx=document.getElementById('infectedChart').getContext('2d');
+
+      interactionsChart=new Chart(iCtx,{ type:'line', data:{ labels:[], datasets:[{ label:'Interactions per Day per Person', data:[], fill:false }] }, options:{ animation:{ duration:0 }, scales:{ x:{ title:{ display:true, text:'Days' }}, y:{ title:{ display:true, text:'Interactions per Person' }}}}});
+
+      infectedChart=new Chart(eCtx,{ type:'line', data:{ labels:[], datasets:[{ label:'% Infected', data:[], fill:false }] }, options:{ animation:{ duration:0 }, scales:{ x:{ title:{ display:true, text:'Days' }}, y:{ title:{ display:true, text:'Percent Infected' }, max:100 }}}});
+
+      ctx.clearRect(0,0,w,h);
+      agents.forEach(a=>drawAgent(ctx,a));
+    }
+
+    function drawAgent(ctx,a){ ctx.beginPath(); ctx.arc(a.x,a.y,4,0,2*Math.PI); ctx.fillStyle=a.infected?'red':'blue'; ctx.fill(); }
+
+    function step(){
+      const speed=parseFloat(document.getElementById('speedSlider').value);
+      const delta=1/speed;
+      const simCanvas=document.getElementById('simulationCanvas');
+      const ctx=simCanvas.getContext('2d');
+      const w=simCanvas.width, h=simCanvas.height;
+      let interactions=0;
+
+      agents.forEach(a=>a.move(speed,w,h));
+      for(let i=0;i<agents.length;i++) for(let j=i+1;j<agents.length;j++){
+        const dx=agents[i].x-agents[j].x, dy=agents[i].y-agents[j].y;
+        if(dx*dx+dy*dy<R*R){ interactions++;
+          if(agents[i].infected&&!agents[j].infected){ agents[j].infected=true; agents[j].daysInfected=0; }
+          if(agents[j].infected&&!agents[i].infected){ agents[i].infected=true; agents[i].daysInfected=0; }}
+      }
+
+      agents.forEach(a=>a.updateInfection(delta));
+      ctx.clearRect(0,0,w,h); agents.forEach(a=>drawAgent(ctx,a));
+
+      const infectedCount=agents.filter(a=>a.infected).length;
+      const ipu=(interactions*speed)/agents.length;
+      timeStep+=delta;
+
+      interactionsChart.data.labels.push(timeStep.toFixed(2));
+      interactionsChart.data.datasets[0].data.push(ipu);
+      interactionsChart.update('none');
+
+      infectedChart.data.labels.push(timeStep.toFixed(2));
+      infectedChart.data.datasets[0].data.push(((infectedCount/agents.length)*100).toFixed(1));
+      infectedChart.update('none');
+
+      if(running) requestAnimationFrame(step);
+    }
+
+    document.getElementById('startBtn').addEventListener('click',()=>{ if(!running){ running=true; step(); }});
+    document.getElementById('pauseBtn').addEventListener('click',()=>{ running=false; });
+    document.getElementById('resetBtn').addEventListener('click',()=>{ running=false; init(); });
+
+    init();
+  </script>
+</body>
+</html>
