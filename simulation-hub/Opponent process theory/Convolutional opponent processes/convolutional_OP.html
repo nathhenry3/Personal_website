@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Opponent Process Simulation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 40px; }
+    .slider-group { margin: 20px 0; }
+    label { display: block; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+<h2>Opponent Process Simulation</h2>
+
+<canvas id="chart" width="900" height="400"></canvas>
+
+<div class="slider-group">
+  <label>a-process half-life: <span id="aHalfLifeLabel">10</span></label>
+  <input type="range" id="aHalfLife" min="1" max="100" value="10" step="1">
+</div>
+
+<div class="slider-group">
+  <label>b-process half-life: <span id="bHalfLifeLabel">80</span></label>
+  <input type="range" id="bHalfLife" min="1" max="200" value="80" step="1">
+</div>
+
+<div class="slider-group">
+  <label>a-process intensity: <span id="aIntensityLabel">8</span></label>
+  <input type="range" id="aIntensity" min="1" max="20" value="8" step="1">
+</div>
+
+<div class="slider-group">
+  <label>b-process intensity: <span id="bIntensityLabel">1</span></label>
+  <input type="range" id="bIntensity" min="0" max="5" value="1" step="0.1">
+</div>
+
+<script>
+const t = Array.from({length: 1000}, (_, i) => i); // time from 0 to 999
+const deltaPositions = [40, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640];
+
+function generateDeltas(length, positions) {
+  const deltas = Array(length).fill(0);
+  positions.forEach(p => { if (p < length) deltas[p] = 1; });
+  return deltas;
+}
+
+function expKernel(t, halfLife, intensity) {
+  const lambda = Math.log(2) / halfLife;
+  return t.map(x => intensity * Math.exp(-lambda * x));
+}
+
+function convolve(signal, kernel) {
+  const result = new Array(signal.length).fill(0);
+  for (let i = 0; i < signal.length; i++) {
+    for (let j = 0; j <= i; j++) {
+      result[i] += signal[j] * kernel[i - j];
+    }
+  }
+  return result;
+}
+
+let chart = null;
+
+function updateChart() {
+  const aHalf = parseFloat(document.getElementById("aHalfLife").value);
+  const bHalf = parseFloat(document.getElementById("bHalfLife").value);
+  const aIntensity = parseFloat(document.getElementById("aIntensity").value);
+  const bIntensity = parseFloat(document.getElementById("bIntensity").value);
+
+  document.getElementById("aHalfLifeLabel").textContent = aHalf;
+  document.getElementById("bHalfLifeLabel").textContent = bHalf;
+  document.getElementById("aIntensityLabel").textContent = aIntensity;
+  document.getElementById("bIntensityLabel").textContent = bIntensity;
+
+  const deltas = generateDeltas(t.length, deltaPositions);
+  const aKernel = expKernel(t, aHalf, aIntensity);
+  const bKernel = expKernel(t, bHalf, -bIntensity);
+  const aConv = convolve(deltas, aKernel);
+  const bConv = convolve(deltas, bKernel);
+  const h = aConv.map((v, i) => v + bConv[i]);
+
+  if (chart) {
+    chart.data.datasets[0].data = h;
+    chart.update();
+  } else {
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: t,
+        datasets: [{
+          label: 'Convolutional model',
+          data: h,
+          borderColor: '#52a736',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          x: {
+            title: { display: true, text: 't [minutes]' }
+          },
+          y: {
+            title: { display: true, text: 'h(t) [arb. units]' }
+          }
+        }
+      }
+    });
+  }
+}
+
+document.querySelectorAll("input").forEach(input => {
+  input.addEventListener("input", updateChart);
+});
+
+updateChart();
+</script>
+
+</body>
+</html>

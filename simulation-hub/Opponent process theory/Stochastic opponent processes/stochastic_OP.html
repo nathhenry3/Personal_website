@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monte Carlo simulation of opponent processes</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin: 20px; background: #121212; color: #e0e0e0; font-family: sans-serif; }
+    h2 { color: #fff; }
+    .controls { background: #1e1e1e; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 20px; }
+    .slider-group { margin: 12px 0; display: flex; align-items: center; }
+    .slider-group label { width: 200px; color: #ccc; }
+    .slider-group input[type="range"] { margin-right: 10px; flex: 1; accent-color: #52a736; }
+    .slider-group input[type="number"] { width: 80px; background: #2c2c2c; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; padding: 2px 4px; }
+    #runBtn { background: #52a736; color: #121212; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+    #runBtn:disabled { background: #37472b; cursor: not-allowed; }
+    progress { width: 100%; height: 16px; appearance: none; margin-top: 10px; }
+    progress::-webkit-progress-bar { background: #2c2c2c; border-radius: 4px; }
+    progress::-webkit-progress-value { background: #52a736; border-radius: 4px; }
+    .charts { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; }
+    canvas { background: #1e1e1e; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+  </style>
+</head>
+<body>
+
+<h2>Monte Carlo simulation of opponent processes leading to addiction</h2>
+
+<div class="controls">
+  <div class="slider-group">
+    <label for="simHours" title="Simulation length in hours">Simulation length (hours):</label>
+    <input type="range" id="simHours" min="1" max="24" value="16">
+    <input type="number" id="simHoursManual" value="16">
+  </div>
+  <div class="slider-group">
+    <label for="participants">Number of participants:</label>
+    <input type="range" id="participants" min="1" max="1000" value="100">
+    <input type="number" id="participantsManual" value="100">
+  </div>
+  <div class="slider-group">
+    <label for="sensitivity">Negative-affect sensitivity:</label>
+    <input type="range" id="sensitivity" min="0" max="0.2" step="0.005" value="0.05">
+    <input type="number" id="sensitivityManual" step="0.005" value="0.05">
+  </div>
+  <div class="slider-group">
+    <label for="aHalfLife">a-process half-life (min):</label>
+    <input type="range" id="aHalfLife" min="1" max="100" value="10">
+    <input type="number" id="aHalfLifeManual" value="10">
+  </div>
+  <div class="slider-group">
+    <label for="bHalfLife">b-process half-life (min):</label>
+    <input type="range" id="bHalfLife" min="1" max="200" value="80">
+    <input type="number" id="bHalfLifeManual" value="80">
+  </div>
+  <div class="slider-group">
+    <label for="aIntensity">a-process intensity:</label>
+    <input type="range" id="aIntensity" min="1" max="20" value="8">
+    <input type="number" id="aIntensityManual" value="8">
+  </div>
+  <div class="slider-group">
+    <label for="bIntensity">b-process intensity:</label>
+    <input type="range" id="bIntensity" min="0" max="5" step="0.1" value="1">
+    <input type="number" id="bIntensityManual" step="0.1" value="1">
+  </div>
+  <button id="runBtn">Run Simulation</button><br>
+  <progress id="progressBar" value="0" max="100"></progress>
+</div>
+
+<div class="charts">
+  <canvas id="mainChart" width="600" height="400"></canvas>
+  <canvas id="histogramChart" width="300" height="400"></canvas>
+  <canvas id="lapseDistChart" width="600" height="300"></canvas>
+</div>
+
+<script>
+let T = 16 * 60;
+let times = [];
+function updateTimeArray() {
+  const hours = parseFloat(document.getElementById('simHoursManual').value) || 0;
+  T = Math.max(1, Math.round(hours * 60));
+  times = Array.from({length: T}, (_, i) => (i/60).toFixed(2));
+}
+updateTimeArray();
+
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+function simulateParticipant({aHalf, bHalf, aIntensity, bIntensity, sensitivity}) {
+  const λA = Math.log(2)/aHalf;
+  const λB = Math.log(2)/bHalf;
+  const lapses = [40];
+  const affect = new Array(T).fill(0);
+
+  for (let t=41; t<T; t++) {
+    let val=0;
+    for (let t0 of lapses) {
+      const dt = t - t0;
+      val += aIntensity * Math.exp(-λA * dt);
+      val += -bIntensity * Math.exp(-λB * dt);
+    }
+    affect[t] = val;
+    const p = Math.min(1, Math.max(0, sensitivity * -val));
+    if (Math.random() < p) lapses.push(t);
+  }
+  return {affect, count: lapses.length};
+}
+
+let mainChart, histChart, lapseDistChart;
+
+async function runSimulation() {
+  updateTimeArray();
+  const runBtn = document.getElementById('runBtn');
+  const progressBar = document.getElementById('progressBar');
+
+  const numP = parseInt(document.getElementById('participantsManual').value) || 0;
+  const sensitivity = parseFloat(document.getElementById('sensitivityManual').value) || 0;
+  const aHalf = parseFloat(document.getElementById('aHalfLifeManual').value) || 0;
+  const bHalf = parseFloat(document.getElementById('bHalfLifeManual').value) || 0;
+  const aIntensity = parseFloat(document.getElementById('aIntensityManual').value) || 0;
+  const bIntensity = parseFloat(document.getElementById('bIntensityManual').value) || 0;
+
+  // sync sliders
+  document.getElementById('simHours').value = Math.min(document.getElementById('simHours').max, document.getElementById('simHoursManual').value);
+  document.getElementById('participants').value = Math.min(document.getElementById('participants').max, numP);
+  document.getElementById('sensitivity').value = Math.min(document.getElementById('sensitivity').max, sensitivity);
+  document.getElementById('aHalfLife').value = Math.min(document.getElementById('aHalfLife').max, aHalf);
+  document.getElementById('bHalfLife').value = Math.min(document.getElementById('bHalfLife').max, bHalf);
+  document.getElementById('aIntensity').value = Math.min(document.getElementById('aIntensity').max, aIntensity);
+  document.getElementById('bIntensity').value = Math.min(document.getElementById('bIntensity').max, bIntensity);
+
+  progressBar.max = numP;
+  progressBar.value = 0;
+  runBtn.disabled = true;
+
+  const allFinal = [], lapseCounts = [], datasets = [];
+
+  for (let i=0; i<numP; i++) {
+    const {affect, count} = simulateParticipant({aHalf, bHalf, aIntensity, bIntensity, sensitivity});
+    const hue = Math.round((i*360)/numP);
+    datasets.push({ data: affect, borderWidth:1, pointRadius:0, fill:false, borderColor:`hsl(${hue},80%,60%)` });
+    allFinal.push(affect[T-1]); lapseCounts.push(count);
+    progressBar.value = i+1;
+    await sleep(0);
+  }
+
+  const darkOpts = {
+    responsive:false, plugins:{legend:{display:false}},
+    scales:{ x:{ title:{display:true,text:'Time (hours)', color:'#e0e0e0'}, ticks:{color:'#e0e0e0'}, grid:{color:'rgba(255,255,255,0.1)'} },
+             y:{ title:{display:true,text:'Affect (arb. units)', color:'#e0e0e0'}, ticks:{color:'#e0e0e0'}, grid:{color:'rgba(255,255,255,0.1)'} } }
+  };
+
+  const mainData = { labels: times, datasets };
+  if(mainChart) { mainChart.data=mainData; mainChart.options=darkOpts; mainChart.update(); }
+  else { const ctx=document.getElementById('mainChart').getContext('2d'); mainChart=new Chart(ctx,{type:'line',data:mainData,options:darkOpts}); }
+
+  // final-affect histogram
+  const binCount=30, minV=Math.min(...allFinal), maxV=Math.max(...allFinal);
+  const binSize=(maxV-minV)/binCount, bins=Array(binCount).fill(0);
+  allFinal.forEach(v=>{const idx=Math.min(binCount-1,Math.floor((v-minV)/binSize)); bins[idx]++;});
+  const binLabels=bins.map((_,i)=>`${(minV+i*binSize).toFixed(1)}–${(minV+(i+1)*binSize).toFixed(1)}`);
+  const histData={labels:binLabels,datasets:[{data:bins,backgroundColor:'rgba(82,167,54,0.6)'}]};
+  const histOpts={responsive:false,indexAxis:'y',scales:{ y:{reverse:true,title:{display:true,text:'Final Affect Bins',color:'#e0e0e0'},ticks:{color:'#e0e0e0'},grid:{color:'rgba(255,255,255,0.1)'}}, x:{title:{display:true,text:'Number of Participants',color:'#e0e0e0'},ticks:{color:'#e0e0e0'},grid:{color:'rgba(255,255,255,0.1)'}}}};
+  if(histChart){histChart.data=histData;histChart.options=histOpts;histChart.update();}
+  else{const ctx2=document.getElementById('histogramChart').getContext('2d');histChart=new Chart(ctx2,{type:'bar',data:histData,options:histOpts});}
+
+  // lapse count distribution
+  const minC=Math.min(...lapseCounts), maxC=Math.max(...lapseCounts);
+  const xLabels=Array.from({length:maxC-minC+1},(_,i)=>i+minC);
+  const yValues=xLabels.map(k=>lapseCounts.filter(c=>c===k).length);
+  const lapseData={labels:xLabels,datasets:[{data:yValues,backgroundColor:'rgba(200,100,50,0.6)'}]};
+  const lapseOpts={responsive:false,scales:{ x:{title:{display:true,text:'Total number of lapses',color:'#e0e0e0'},ticks:{color:'#e0e0e0'},grid:{color:'rgba(255,255,255,0.1)'}}, y:{title:{display:true,text:'Number of participants',color:'#e0e0e0'},ticks:{color:'#e0e0e0'},grid:{color:'rgba(255,255,255,0.1)'}}}};
+  if(lapseDistChart){lapseDistChart.data=lapseData;lapseDistChart.options=lapseOpts;lapseDistChart.update();}
+  else{const ctx3=document.getElementById('lapseDistChart').getContext('2d');lapseDistChart=new Chart(ctx3,{type:'bar',data:lapseData,options:lapseOpts});}
+
+  runBtn.disabled=false;
+}
+
+// event listeners
+['simHours','participants','sensitivity','aHalfLife','bHalfLife','aIntensity','bIntensity'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{
+    const manual=document.getElementById(id+'Manual');
+    manual.value=e.target.value;
+  });
+});
+['simHoursManual','participantsManual','sensitivityManual','aHalfLifeManual','bHalfLifeManual','aIntensityManual','bIntensityManual']
+.forEach(manualId=>{
+  document.getElementById(manualId).addEventListener('change',runSimulation);
+});
+document.getElementById('runBtn').addEventListener('click',runSimulation);
+
+</script>
+
+</body>
+</html>
