@@ -6,10 +6,10 @@
   <title>Nathan Henry | Postdoctoral Research Associate</title>
   <style>
     :root {
-      --bg: #121212;
+      --bg: #1b1b1b;
       --fg: #e0e0e0;
-      --accent: #29a3f5;
-      --card-bg: #1e1e1e;
+      --accent: #ffb347;
+      --card-bg: #262626;
     }
     *, *::before, *::after {
       box-sizing: border-box;
@@ -49,11 +49,23 @@
     }
     nav a {
       color: var(--fg);
-      margin: 0 0.75rem;
+      margin: 0 1rem;
       text-decoration: none;
       font-weight: 500;
+      transition: color 0.2s ease;
     }
     nav a:hover {
+      color: var(--accent);
+    }
+    nav a.sim-hub {
+      font-weight: 600;
+      font-size: 1.05rem;
+      background-color: rgba(255, 179, 71, 0.1);
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+    }
+    nav a.sim-hub::before {
+      content: "› ";
       color: var(--accent);
     }
     main {
@@ -96,11 +108,11 @@
     <h2>Postdoctoral Research Associate, UWA</h2>
     <nav>
       <a href="/">Home</a>
+      <a href="simulation-hub/simhub.html" class="external sim-hub">Simulation Library</a>
       <a href="https://orcid.org/0000-0002-4299-1442" class="external">ORCID</a>
       <a href="https://www.researchgate.net/profile/Nathan-Henry-4" class="external">ResearchGate</a>
       <a href="https://github.com/nathhenry3" class="external">GitHub</a>
       <a href="https://www.linkedin.com/in/nathan-henry-5955b2b3/" class="external">LinkedIn</a>
-	  <a href="simulation-hub/simhub.html" class="external">Simulation Hub</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
@@ -108,16 +120,16 @@
     <section id="about">
       <h3>About</h3>
       <p>Nathan is a postdoctoral research associate within the Human Factors and Applied Cognition lab, where he is developing novel paradigms for attentional control training to enhance the performance of submarine operators. His broader interests lie in the intersection between human psychology and digital technologies, including artificial intelligence.</p>
-	  </br>
-      <p>Nathan’s doctoral research explored the psychological impact of Internet and pornography addiction, employing novel mathematical models to quantify the emotional dynamics produced by these behaviors. He previously worked as a data manager and analyst at Auckland University of Technology, providing statistical support within the Faculty of Health and Environmental Sciences.</p>
-      </br>
-      <p>Originally trained as a physicist at the University of Auckland, Nathan worked at Auckland City Hospital as a Medical Physics Registrar, while also obtaining his Master’s degree in Medical Physics at the University of Canterbury.</p>
+      <br>
+      <p>Nathan’s doctoral research explored the psychological impact of Internet and pornography addiction, employing novel mathematical models to quantify the emotional dynamics produced by these behaviors. In particular, he is interested in the use of Ecological Momentary Assessment (also known as the Experience Sampling Method) for measuring high-frequency variation in emotional states.</p>
+      <br>
+      <p>Originally trained as a physicist at the University of Auckland, Nathan worked at Auckland City Hospital as a Medical Physics Registrar, while also obtaining his Master’s degree in Medical Physics at the University of Canterbury. He previously worked as a data manager and analyst at Auckland University of Technology, providing statistical support within the Faculty of Health and Environmental Sciences.</p>
     </section>
     <section id="interests">
       <h3>Interests</h3>
       <ul>
         <li>Behavioral addictions</li>
-	<li>Problematic pornography use (PPU)</li>
+        <li>Problematic pornography use (PPU)</li>
         <li>Human factors</li>
         <li>Statistical analysis (R, Python, SQL)</li>
         <li>Computational modeling</li>
