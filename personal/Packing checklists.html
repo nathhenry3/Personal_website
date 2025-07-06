@@ -236,30 +236,73 @@
     <script>
         const checklistData = {
             camping: {
-                "Shelter & Sleeping": ["Tent, poles, stakes", "Tarp / Groundsheet", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress"],
-                "Cooking & Kitchen": ["Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs)", "Plates and bowls", "Cutlery", "Mugs / Cups", "Cooler / Esky", "Water bottles", "Water filter / purification", "Dish soap (biodegradable)", "Sponge / Scrubber", "Trash bags", "Paper towels", "Ziploc bags", "Can opener", "Bottle opener", "Coffee/tea maker (e.g., AeroPress)"],
-                "Clothing": ["Moisture-wicking base layers", "Hiking shirts", "Fleece or insulated jacket", "Waterproof rain jacket", "Waterproof pants", "Hiking pants / Shorts", "Underwear and socks (wool/synthetic)", "Pajamas", "Hat (for sun and warmth)", "Gloves / Mittens", "Camp shoes (sandals/crocs)", "Hiking boots"],
-                "Safety & First Aid": ["First-aid kit (band-aids, antiseptic, pain relief, blister care)", "Emergency whistle", "Multi-tool or knife", "Headlamps / Flashlights (with extra batteries)", "Power bank", "Map and compass / GPS device", "Emergency communication (e.g., PLB, satellite phone)", "Bear spray (if applicable)"],
-                "Health & Hygiene": ["Toiletries (toothbrush, toothpaste)", "Quick-dry towel", "Sunscreen", "Insect repellent", "Hand sanitizer", "Toilet paper", "Camp shovel / trowel"],
-                "Miscellaneous": ["Backpacks (daypack & main pack)", "Camp chairs", "Camp table", "Rope / Cordage", "Duct tape", "Fire starters (lighter, matches)", "Axe / Saw", "Book / Entertainment", "Camera"],
-                "Baby Gear": ["Portable crib / Pack-n-play", "Baby sleeping bag / Wearable blanket", "Baby carrier (for hiking)", "Outdoor blanket", "Sun hat for baby", "Baby-safe sunscreen", "Diapers and wipes", "Changing pad", "Diaper disposal bags", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "Portable high chair", "Baby first-aid items", "Favorite toys/books"]
+                "Shelter & Sleeping": [
+                    "Tent, poles, stakes", "Tent footprint/groundsheet", "Tarp", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress", "Tent repair kit", "Extra guy lines/rope", "Mallet/hammer"
+                ],
+                "Cooking & Kitchen": [
+                    "Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs, ladle)", "Plates and bowls", "Cutlery", "Mugs / Cups", "Cooler / Esky", "Ice packs/gel packs", "Water bottles", "Water filter / purification system", "Dish soap (biodegradable)", "Sponge / Scrubber", "Trash bags", "Paper towels", "Ziploc bags", "Can opener", "Bottle opener", "Coffee/tea maker (e.g., AeroPress, French press)", "Cutting board", "Camp knife set", "Cooking oil", "Basic spices (salt, pepper)", "Coffee filters", "Thermos", "Camp sink/basin", "Drying rack/line", "Fire extinguisher (small)", "Grill grate", "Dutch oven"
+                ],
+                "Clothing": [
+                    "Moisture-wicking base layers", "Hiking shirts", "Fleece or insulated jacket", "Waterproof rain jacket", "Waterproof pants", "Hiking pants / Shorts", "Underwear and socks (wool/synthetic, multiple pairs)", "Thermal underwear", "Pajamas", "Hat (for sun and warmth)", "Gloves / Mittens", "Waterproof gloves", "Gaiters", "Camp shoes (sandals/crocs)", "Hiking boots", "Spare shoes/sandals", "Laundry bag"
+                ],
+                "Safety & First Aid": [
+                    "First-aid kit (band-aids, antiseptic, pain relief, blister care, gauze, tape)", "Emergency whistle", "Multi-tool or knife", "Headlamps / Flashlights (with extra batteries)", "Power bank", "Map and compass / GPS device", "Emergency communication (e.g., PLB, satellite phone, walkie-talkies)", "Bear spray (if applicable)", "Water purification tablets", "Emergency blanket", "Duct tape", "Rope/cordage (utility)", "Fire starting kit (lighter, waterproof matches, fire steel, tinder)", "Bear canister/bag (if applicable)", "Heavy-duty insect repellent", "Snake bite kit"
+                ],
+                "Health & Hygiene": [
+                    "Toiletries (toothbrush, toothpaste, dental floss)", "Quick-dry towel", "Sunscreen", "Insect repellent", "Hand sanitizer", "Toilet paper", "Camp shovel / trowel", "Biodegradable soap", "Personal medications (with prescription copies)", "Pain relievers (ibuprofen, paracetamol)", "Anti-diarrhea medication", "Allergy medication", "Blister treatment/Moleskin", "Hand warmers", "Small mirror", "Comb/brush", "Feminine hygiene products"
+                ],
+                "Miscellaneous": [
+                    "Backpacks (daypack & main pack)", "Camp chairs", "Camp table", "Rope / Cordage", "Duct tape", "Fire starters (lighter, matches)", "Axe / Saw", "Book / Entertainment (cards, board games)", "Camera and accessories (extra battery, memory card)", "Camp shower", "Portable toilet", "Solar charger", "Binoculars", "Field guides (plants, birds)", "Journal / Pen", "Fishing gear", "Repair kits (tent, stove, general)", "Small broom/dustpan", "Camp rug/mat", "Camp lighting (lanterns, string lights)", "Bungee cords", "Zip ties", "Dry bags/stuff sacks"
+                ],
+                "Baby Gear": [
+                    "Portable crib / Pack-n-play", "Baby sleeping bag / Wearable blanket", "Baby carrier (for hiking)", "Outdoor blanket", "Sun hat for baby", "Baby-safe sunscreen", "Diapers and wipes (plenty)", "Changing pad", "Diaper disposal bags", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "Portable high chair", "Baby first-aid items (diaper cream, thermometer, nasal aspirator)", "Favorite toys/books", "Baby soap/shampoo", "Baby monitor", "Portable sound machine", "Baby-safe cleaning wipes", "Bibs", "Burp cloths"
+                ]
             },
             local: {
-                "Essentials": ["Wallet (ID, credit cards)", "Keys (house, car)", "Phone and charger", "Portable power bank", "Medications (personal)", "Small first-aid kit"],
-                "Clothing": ["T-shirts / Tops", "Pants / Jeans / Shorts", "Sweater / Jacket", "Underwear and socks", "Pajamas", "Swimsuit (if applicable)", "Dressier outfit (if needed)", "Shoes / Sandals"],
-                "Toiletries": ["Toothbrush and toothpaste", "Deodorant", "Shampoo and conditioner", "Soap / Body wash", "Hairbrush / Comb", "Skincare products", "Sunscreen", "Contact lenses / Glasses"],
-                "Hiking Gear": ["Daypack", "Hiking boots / shoes", "Water bottle", "Snacks", "Rain jacket", "Sun hat", "Map or trail app on phone"],
-                "Miscellaneous": ["Book / E-reader", "Headphones", "Sunglasses", "Reusable water bottle", "Snacks for the road", "Reusable shopping bag"],
-                "Baby Gear": ["Diaper bag", "Diapers and wipes", "Changing pad", "Portable crib / Bassinet", "Car seat", "Stroller", "Baby carrier", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "A few outfits", "Pajamas", "Sun hat", "Blanket", "Favorite toys/soothers"]
+                "Essentials": [
+                    "Wallet (ID, credit cards, loyalty cards)", "Keys (house, car, spare car key)", "Phone and charger", "Portable power bank", "Medications (personal, with original labels)", "Small first-aid kit", "Copies of IDs/important documents (digital & physical)", "Emergency contacts list", "Travel insurance information", "Car documents (registration, insurance)", "Small amount of cash"
+                ],
+                "Clothing": [
+                    "T-shirts / Tops", "Pants / Jeans / Shorts", "Sweater / Jacket", "Underwear and socks (multiple pairs)", "Pajamas", "Swimsuit (if applicable)", "Dressier outfit (if needed)", "Shoes / Sandals", "Specific outfits for events", "Activewear", "Rain gear", "Formal wear (if required)", "Laundry bag"
+                ],
+                "Toiletries": [
+                    "Toothbrush and toothpaste", "Deodorant", "Shampoo and conditioner", "Soap / Body wash", "Hairbrush / Comb", "Skincare products", "Sunscreen", "Contact lenses / Glasses and solution", "Razor and shaving cream", "Makeup", "Hair styling products", "Nail clippers", "Tweezers", "Dental floss"
+                ],
+                "Electronics": [
+                    "Laptop / Tablet and all chargers", "Camera and accessories (extra battery, memory card)", "Portable speaker", "Headphones", "Car charger", "E-reader"
+                ],
+                "Hiking Gear": [
+                    "Daypack", "Hiking boots / shoes", "Water bottle", "Snacks", "Rain jacket", "Sun hat", "Map or trail app on phone", "Trekking poles (if needed)"
+                ],
+                "Miscellaneous": [
+                    "Book / E-reader", "Headphones", "Sunglasses", "Reusable water bottle", "Snacks for the road", "Reusable shopping bag", "Small umbrella", "Travel games", "Journal", "Pen", "Small gifts (if visiting friends/family)", "Neck pillow (for long drives)"
+                ],
+                "Baby Gear": [
+                    "Diaper bag", "Diapers and wipes (plenty)", "Changing pad", "Portable crib / Bassinet", "Car seat", "Stroller", "Baby carrier", "Bottles and formula/milk (pre-portioned)", "Baby food and snacks", "Sippy cup", "Multiple outfits", "Pajamas", "Sun hat", "Blanket", "Favorite toys/soothers", "Diaper cream", "Baby soap/shampoo", "Baby monitor", "Baby-safe cleaning wipes", "Bibs", "Burp cloths", "Baby specific medications", "Thermometer", "Nasal aspirator"
+                ]
             },
             overseas: {
-                "Documents & Money": ["Passport and visas", "Flight tickets / Boarding passes (digital/print)", "Hotel reservations", "Copy of passport & important docs (digital/physical)", "Wallet (cash, credit cards)", "Local currency"],
-                "Electronics": ["Phone and charger", "Portable power bank", "Travel adapter / Converter", "Headphones (noise-cancelling recommended)", "Laptop / Tablet and charger", "E-reader"],
-                "Clothing": ["Shirts / Tops", "Pants / Trousers", "Jacket / Coat (weather appropriate)", "Underwear and socks (plenty)", "Pajamas", "Swimsuit", "Formal / Smart casual outfit", "Comfortable walking shoes", "Sandals / Flip-flops"],
-                "Toiletries": ["Toothbrush, toothpaste, floss", "Deodorant", "Shampoo, conditioner, soap (travel size)", "Skincare routine items", "Sunscreen", "Lip balm", "Hand sanitizer", "Basic first-aid kit (painkillers, band-aids, motion sickness pills)", "Prescription medications (in original bottles)", "Contact lenses / Glasses and solution"],
-                "Carry-On Essentials": ["Passport & documents", "Phone, wallet, keys", "Medications", "Change of clothes (1 outfit)", "Basic toiletries", "Power bank and cables", "Snacks", "Empty water bottle (to fill post-security)", "Book / Entertainment"],
-                "Miscellaneous": ["Daypack / Small bag", "Travel lock", "Sunglasses", "Sleep mask and earplugs", "Travel pillow", "Reusable water bottle"],
-                "Baby Gear": ["Passport for baby", "Car seat (check airline policy)", "Travel stroller (lightweight)", "Baby carrier", "Diaper bag (as carry-on)", "Plenty of diapers and wipes for flight + 2 days", "Changing pad", "Formula / Breast milk (check airline rules)", "Baby food and snacks", "Bottles / Sippy cups", "Multiple outfits", "Blankets", "Toys / Pacifiers", "Baby-safe medications (e.g., pain relief)", "Sling / Carrier"]
+                "Documents & Money": [
+                    "Passport and visas", "Flight tickets / Boarding passes (digital/print)", "Hotel reservations", "Copy of passport & important docs (digital/physical)", "Wallet (cash, credit cards, multiple from different banks)", "Local currency", "International driving permit (if applicable)", "Vaccination records", "Emergency contact list (physical copy)", "Small bills for tips", "Money belt/hidden wallet"
+                ],
+                "Electronics": [
+                    "Phone and charger", "Portable power bank", "Universal travel adapter / Converter", "Headphones (noise-cancelling recommended)", "Laptop / Tablet and charger", "E-reader", "Unlocked phone", "Local SIM card/eSIM details", "Portable Wi-Fi hotspot", "Camera gear (lenses, tripod, extra batteries)", "External hard drive/cloud storage device"
+                ],
+                "Clothing": [
+                    "Shirts / Tops (mix of casual and smart)", "Pants / Trousers", "Jacket / Coat (weather appropriate, packable)", "Underwear and socks (plenty, quick-dry)", "Pajamas", "Swimsuit", "Formal / Smart casual outfit (if needed)", "Comfortable walking shoes", "Sandals / Flip-flops", "Dress shoes", "Layering options", "Quick-dry fabrics", "Specific attire for cultural/religious sites", "Laundry bag"
+                ],
+                "Toiletries": [
+                    "Toothbrush, toothpaste, floss", "Deodorant", "Shampoo, conditioner, soap (travel size)", "Skincare routine items", "Sunscreen (high SPF)", "Lip balm", "Hand sanitizer", "Basic first-aid kit (painkillers, band-aids, motion sickness pills, antiseptic wipes, blister treatment)", "Prescription medications (in original bottles, with doctor's note)", "Contact lenses / Glasses and solution", "Wet wipes", "Insect repellent (tropical strength if needed)", "Feminine hygiene products", "Small mirror", "Nail kit (clippers, file)", "Comb/brush"
+                ],
+                "Carry-On Essentials": [
+                    "Passport & documents", "Phone, wallet, keys", "Medications (essential)", "Change of clothes (1-2 outfits)", "Basic toiletries (TSA-compliant)", "Power bank and cables", "Snacks", "Empty water bottle (to fill post-security)", "Book / Entertainment (e-reader, tablet)", "Neck pillow", "Eye mask and earplugs", "Pen (for customs forms)", "Valuables (jewelry, expensive electronics)", "Travel lock (TSA approved)"
+                ],
+                "Miscellaneous": [
+                    "Daypack / Small bag", "Travel lock (TSA approved)", "Luggage tags", "Sunglasses", "Sleep mask and earplugs", "Travel pillow", "Reusable water bottle", "Reusable shopping bag", "Travel journal", "Pen", "Gifts for hosts", "Language phrasebook/app", "Small sewing kit", "Universal sink stopper", "Travel clothesline", "Small umbrella", "Dry bags/stuff sacks"
+                ],
+                "Baby Gear": [
+                    "Passport for baby", "Car seat (check airline policy and destination regulations)", "Travel stroller (lightweight, compact)", "Baby carrier", "Diaper bag (as carry-on)", "Plenty of diapers and wipes for flight + 2-3 days", "Changing pad", "Formula / Breast milk (check airline rules for liquids)", "Baby food and snacks (pouches, crackers)", "Bottles / Sippy cups", "Multiple outfits (for different climates/spills)", "Pajamas", "Blankets", "Favorite toys / Pacifiers", "Baby-safe medications (e.g., pain relief, fever reducer)", "Thermometer", "Nasal aspirator", "Sling / Carrier", "Sun hat for baby", "Baby sunscreen", "Travel-sized baby toiletries (shampoo, body wash)", "Baby monitor", "Portable sound machine"
+                ]
             }
         };
 
@@ -376,6 +419,9 @@
                     customSection.appendChild(title);
                     container.appendChild(customSection);
                 }
+                // Clear existing custom items to prevent duplicates on re-render
+                customSection.querySelectorAll('[data-custom="true"]').forEach(el => el.remove());
+
                 state.customItems.forEach((item, index) => {
                     const id = `custom-${index}`;
                     customSection.appendChild(createChecklistItem(item.name, id, true));
