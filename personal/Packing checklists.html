@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel & Camping Checklist</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            font-size: 16px;
+        }
+        h1, h2, h3 {
+            color: #7b8ff3;
+            border-bottom: 2px solid #7b8ff3;
+            padding-bottom: 10px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2a2a2e;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .instructions {
+            margin-bottom: 25px;
+            list-style-type: disc; /* Ensure bullet points for the list */
+            padding-left: 20px; /* Add padding for list items */
+        }
+        .instructions li {
+            margin-bottom: 8px; /* Spacing between list items */
+        }
+        .controls-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .control-group label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #7b8ff3;
+            background-color: #333;
+            color: #e0e0e0;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #98a9f5;
+        }
+        .morning-pack-container {
+            border: 2px dashed #f0ad4e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            background-color: #3a362e;
+        }
+        .morning-pack-container h3 {
+            color: #f0ad4e;
+            border-color: #f0ad4e;
+            margin-top: 0;
+        }
+        .category-section {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .category-section h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        .checklist-item, .morning-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 5px;
+            border-bottom: 1px solid #444;
+        }
+        .morning-item {
+            grid-template-columns: auto 1fr;
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        .checklist-item > span, .morning-item > span {
+            grid-column: 1;
+        }
+        .morning-item > span {
+            grid-column: 2;
+        }
+        .checklist-item .checkbox-group {
+            grid-column: 2;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            white-space: nowrap;
+            font-size: 0.9em;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #7b8ff3;
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            font-weight: normal;
+            color: #ccc;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .hidden-packed {
+            display: none !important;
+        }
+        .morning-item .checkbox-packed {
+            grid-column: 1;
+        }
+        .add-item-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 8px;
+        }
+        .add-item-section h3 {
+            margin-top: 0;
+        }
+        .add-item-section input[type="text"] {
+            width: calc(100% - 110px);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #7b8ff3;
+            background-color: #2a2a2e;
+            color: #e0e0e0;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+        .button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+        }
+        .add-button {
+            background-color: #5cb85c;
+        }
+        .add-button:hover {
+            background-color: #4cae4c;
+        }
+        .reset-button {
+            background-color: #c9302c;
+        }
+        .reset-button:hover {
+            background-color: #d9534f;
+        }
+        .settings-toggle {
+            cursor: pointer;
+            font-weight: bold;
+            color: #7b8ff3;
+            display: inline-block;
+            margin-top: 30px;
+            padding: 8px;
+            border: 1px dashed #7b8ff3;
+            border-radius: 5px;
+        }
+        .settings-content {
+            display: none;
+            margin-top: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Nathan & Michelle's Travel Checklist</h1>
+
+        <ul class="instructions">
+            <li>Select your destination type from the dropdown to generate a packing list.</li>
+            <li>Check off items as you pack them.</li>
+            <li>Use the "Pack in AM" checkbox for things you need to use on the morning of departure; these will appear in a separate list at the top for final checking.</li>
+            <li>You can also add manual items at the bottom of the list.</li>
+        </ul>
+
+        <div class="controls-container">
+            <div class="control-group">
+                <label for="checklist-type">Checklist Type:</label>
+                <select id="checklist-type" onchange="handleChecklistChange()">
+                    <option value="camping">Camping</option>
+                    <option value="local">Local Travel</option>
+                    <option value="overseas">Overseas Travel</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="filter-packed">View:</label>
+                <select id="filter-packed" onchange="handleFilterChange()">
+                    <option value="all">Show All</option>
+                    <option value="unpacked">Hide Packed</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="morning-pack-container" class="morning-pack-container" style="display: none;">
+            <h3>To Pack in the Morning</h3>
+            <div id="morning-list"></div>
+        </div>
+
+        <div id="checklist-container"></div>
+        
+        <div class="add-item-section">
+            <h3>Add Custom Item</h3>
+            <input type="text" id="custom-item-input" placeholder="e.g., Yoga ball">
+            <button class="button add-button" onclick="addCustomItem()">Add Item</button>
+        </div>
+
+        <div class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</div>
+        <div class="settings-content" id="settings-content">
+            <button class="button reset-button" onclick="resetChecklist()">Reset Current Checklist</button>
+        </div>
+    </div>
+
+    <script>
+        const checklistData = {
+            camping: {
+                "Shelter & Sleeping": ["Tent, poles, stakes", "Tarp / Groundsheet", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress"],
+                "Cooking & Kitchen": ["Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs)", "Plates and bowls", "Cutlery", "Mugs / Cups", "Cooler / Esky", "Water bottles", "Water filter / purification", "Dish soap (biodegradable)", "Sponge / Scrubber", "Trash bags", "Paper towels", "Ziploc bags", "Can opener", "Bottle opener", "Coffee/tea maker (e.g., AeroPress)"],
+                "Clothing": ["Moisture-wicking base layers", "Hiking shirts", "Fleece or insulated jacket", "Waterproof rain jacket", "Waterproof pants", "Hiking pants / Shorts", "Underwear and socks (wool/synthetic)", "Pajamas", "Hat (for sun and warmth)", "Gloves / Mittens", "Camp shoes (sandals/crocs)", "Hiking boots"],
+                "Safety & First Aid": ["First-aid kit (band-aids, antiseptic, pain relief, blister care)", "Emergency whistle", "Multi-tool or knife", "Headlamps / Flashlights (with extra batteries)", "Power bank", "Map and compass / GPS device", "Emergency communication (e.g., PLB, satellite phone)", "Bear spray (if applicable)"],
+                "Health & Hygiene": ["Toiletries (toothbrush, toothpaste)", "Quick-dry towel", "Sunscreen", "Insect repellent", "Hand sanitizer", "Toilet paper", "Camp shovel / trowel"],
+                "Miscellaneous": ["Backpacks (daypack & main pack)", "Camp chairs", "Camp table", "Rope / Cordage", "Duct tape", "Fire starters (lighter, matches)", "Axe / Saw", "Book / Entertainment", "Camera"],
+                "Baby Gear": ["Portable crib / Pack-n-play", "Baby sleeping bag / Wearable blanket", "Baby carrier (for hiking)", "Outdoor blanket", "Sun hat for baby", "Baby-safe sunscreen", "Diapers and wipes", "Changing pad", "Diaper disposal bags", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "Portable high chair", "Baby first-aid items", "Favorite toys/books"]
+            },
+            local: {
+                "Essentials": ["Wallet (ID, credit cards)", "Keys (house, car)", "Phone and charger", "Portable power bank", "Medications (personal)", "Small first-aid kit"],
+                "Clothing": ["T-shirts / Tops", "Pants / Jeans / Shorts", "Sweater / Jacket", "Underwear and socks", "Pajamas", "Swimsuit (if applicable)", "Dressier outfit (if needed)", "Shoes / Sandals"],
+                "Toiletries": ["Toothbrush and toothpaste", "Deodorant", "Shampoo and conditioner", "Soap / Body wash", "Hairbrush / Comb", "Skincare products", "Sunscreen", "Contact lenses / Glasses"],
+                "Hiking Gear": ["Daypack", "Hiking boots / shoes", "Water bottle", "Snacks", "Rain jacket", "Sun hat", "Map or trail app on phone"],
+                "Miscellaneous": ["Book / E-reader", "Headphones", "Sunglasses", "Reusable water bottle", "Snacks for the road", "Reusable shopping bag"],
+                "Baby Gear": ["Diaper bag", "Diapers and wipes", "Changing pad", "Portable crib / Bassinet", "Car seat", "Stroller", "Baby carrier", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "A few outfits", "Pajamas", "Sun hat", "Blanket", "Favorite toys/soothers"]
+            },
+            overseas: {
+                "Documents & Money": ["Passport and visas", "Flight tickets / Boarding passes (digital/print)", "Hotel reservations", "Copy of passport & important docs (digital/physical)", "Wallet (cash, credit cards)", "Local currency"],
+                "Electronics": ["Phone and charger", "Portable power bank", "Travel adapter / Converter", "Headphones (noise-cancelling recommended)", "Laptop / Tablet and charger", "E-reader"],
+                "Clothing": ["Shirts / Tops", "Pants / Trousers", "Jacket / Coat (weather appropriate)", "Underwear and socks (plenty)", "Pajamas", "Swimsuit", "Formal / Smart casual outfit", "Comfortable walking shoes", "Sandals / Flip-flops"],
+                "Toiletries": ["Toothbrush, toothpaste, floss", "Deodorant", "Shampoo, conditioner, soap (travel size)", "Skincare routine items", "Sunscreen", "Lip balm", "Hand sanitizer", "Basic first-aid kit (painkillers, band-aids, motion sickness pills)", "Prescription medications (in original bottles)", "Contact lenses / Glasses and solution"],
+                "Carry-On Essentials": ["Passport & documents", "Phone, wallet, keys", "Medications", "Change of clothes (1 outfit)", "Basic toiletries", "Power bank and cables", "Snacks", "Empty water bottle (to fill post-security)", "Book / Entertainment"],
+                "Miscellaneous": ["Daypack / Small bag", "Travel lock", "Sunglasses", "Sleep mask and earplugs", "Travel pillow", "Reusable water bottle"],
+                "Baby Gear": ["Passport for baby", "Car seat (check airline policy)", "Travel stroller (lightweight)", "Baby carrier", "Diaper bag (as carry-on)", "Plenty of diapers and wipes for flight + 2 days", "Changing pad", "Formula / Breast milk (check airline rules)", "Baby food and snacks", "Bottles / Sippy cups", "Multiple outfits", "Blankets", "Toys / Pacifiers", "Baby-safe medications (e.g., pain relief)", "Sling / Carrier"]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initialize);
+
+        function getStorageKey() {
+            const type = document.getElementById('checklist-type').value;
+            return `${type}_checklistState`;
+        }
+        
+        function getDefaultState() {
+            return {
+                items: {},
+                customItems: [],
+                filter: 'all'
+            };
+        }
+
+        function initialize() {
+            const savedType = localStorage.getItem('checklistType') || 'camping';
+            document.getElementById('checklist-type').value = savedType;
+            
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            document.getElementById('filter-packed').value = state.filter;
+
+            populateChecklist();
+            loadState();
+        }
+
+        function handleChecklistChange() {
+            const selectedType = document.getElementById('checklist-type').value;
+            localStorage.setItem('checklistType', selectedType);
+            initialize();
+        }
+        
+        function handleFilterChange() {
+            const filterValue = document.getElementById('filter-packed').value;
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            state.filter = filterValue;
+            localStorage.setItem(getStorageKey(), JSON.stringify(state));
+            applyFilter();
+        }
+
+        function createChecklistItem(item, id, isCustom = false) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'checklist-item';
+            itemDiv.id = `item-${id}`;
+            if (isCustom) {
+                itemDiv.dataset.custom = true;
+            }
+
+            const itemName = document.createElement('span');
+            itemName.textContent = item;
+
+            const checkboxGroup = document.createElement('div');
+            checkboxGroup.className = 'checkbox-group';
+
+            const packedLabel = document.createElement('label');
+            packedLabel.textContent = 'Packed';
+            const packedCheckbox = document.createElement('input');
+            packedCheckbox.type = 'checkbox';
+            packedCheckbox.id = `packed-${id}`;
+            packedCheckbox.onchange = () => saveAndRender();
+            packedLabel.prepend(packedCheckbox);
+            
+            const morningLabel = document.createElement('label');
+            morningLabel.textContent = 'Pack in AM';
+            const morningCheckbox = document.createElement('input');
+            morningCheckbox.type = 'checkbox';
+            morningCheckbox.id = `morning-${id}`;
+            morningCheckbox.onchange = () => saveAndRender();
+            morningLabel.prepend(morningCheckbox);
+
+            checkboxGroup.appendChild(packedLabel);
+            checkboxGroup.appendChild(morningLabel);
+
+            itemDiv.appendChild(itemName);
+            itemDiv.appendChild(checkboxGroup);
+            return itemDiv;
+        }
+
+        function populateChecklist() {
+            const type = document.getElementById('checklist-type').value;
+            const data = checklistData[type];
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+
+            // Render standard items
+            for (const category in data) {
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                
+                const title = document.createElement('h3');
+                title.textContent = category;
+                section.appendChild(title);
+
+                data[category].forEach(item => {
+                    const id = `${type}-${category}-${item}`.replace(/[^a-zA-Z0-9-]/g, '');
+                    section.appendChild(createChecklistItem(item, id));
+                });
+                container.appendChild(section);
+            }
+
+            // Render custom items
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            if (state.customItems.length > 0) {
+                let customSection = document.getElementById('custom-items-section');
+                if (!customSection) {
+                    customSection = document.createElement('div');
+                    customSection.className = 'category-section';
+                    customSection.id = 'custom-items-section';
+                    const title = document.createElement('h3');
+                    title.textContent = "Custom Items";
+                    customSection.appendChild(title);
+                    container.appendChild(customSection);
+                }
+                state.customItems.forEach((item, index) => {
+                    const id = `custom-${index}`;
+                    customSection.appendChild(createChecklistItem(item.name, id, true));
+                });
+            }
+        }
+        
+        function addCustomItem() {
+            const input = document.getElementById('custom-item-input');
+            const itemName = input.value.trim();
+            if (!itemName) return;
+
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            state.customItems.push({ name: itemName, packed: false, morning: false, morningPacked: false }); // Initialize new custom item state
+            localStorage.setItem(getStorageKey(), JSON.stringify(state));
+
+            input.value = '';
+            populateChecklist();
+            loadState();
+        }
+
+        function saveAndRender() {
+            saveState();
+            renderUIState();
+        }
+
+        function renderUIState() {
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            const morningListContainer = document.getElementById('morning-list');
+            morningListContainer.innerHTML = '';
+            let hasMorningItems = false;
+            
+            // Update main list items and populate morning list
+            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
+                const id = itemDiv.id.replace('item-', '');
+                const packedCheckbox = document.getElementById(`packed-${id}`);
+                const morningCheckbox = document.getElementById(`morning-${id}`);
+                const itemNameSpan = itemDiv.querySelector('span');
+
+                // Apply 'completed' class to main list items
+                if (packedCheckbox && packedCheckbox.checked) {
+                    itemNameSpan.classList.add('completed');
+                } else {
+                    itemNameSpan.classList.remove('completed');
+                }
+
+                // Populate morning list
+                if (morningCheckbox && morningCheckbox.checked) {
+                    hasMorningItems = true;
+                    const morningItemDiv = document.createElement('div');
+                    morningItemDiv.className = 'morning-item';
+                    morningItemDiv.id = `morning-item-${id}`; // Add ID for filtering
+
+                    const packedMorningCheckbox = document.createElement('input');
+                    packedMorningCheckbox.type = 'checkbox';
+                    packedMorningCheckbox.id = `morning-packed-${id}`;
+                    packedMorningCheckbox.className = 'checkbox-packed';
+                    
+                    // Get the state for this specific item (standard or custom)
+                    let itemState;
+                    if (itemDiv.dataset.custom) {
+                        const customIndex = parseInt(id.replace('custom-', ''));
+                        itemState = state.customItems[customIndex];
+                    } else {
+                        itemState = state.items[id];
+                    }
+
+                    packedMorningCheckbox.checked = itemState?.morningPacked || false;
+
+                    packedMorningCheckbox.onchange = () => {
+                        const mainPackedCheckbox = document.getElementById(`packed-${id}`);
+                        if (mainPackedCheckbox) {
+                           mainPackedCheckbox.checked = packedMorningCheckbox.checked;
+                        }
+                        saveAndRender();
+                    };
+                    
+                    const morningItemName = document.createElement('span');
+                    morningItemName.textContent = itemNameSpan.textContent;
+                    if (packedMorningCheckbox.checked) {
+                        morningItemName.classList.add('completed');
+                    }
+
+                    morningItemDiv.appendChild(packedMorningCheckbox);
+                    morningItemDiv.appendChild(morningItemName);
+                    morningListContainer.appendChild(morningItemDiv);
+                }
+            });
+
+            document.getElementById('morning-pack-container').style.display = hasMorningItems ? 'block' : 'none';
+            applyFilter(); // Apply filter after rendering all items, including morning ones
+        }
+
+        function saveState() {
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+            state.items = {}; // Reset standard items
+            state.customItems = []; // Reset custom items to rebuild from current UI
+
+            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
+                const id = itemDiv.id.replace('item-', '');
+                const packedCheckbox = document.getElementById(`packed-${id}`);
+                const morningCheckbox = document.getElementById(`morning-${id}`);
+                const morningPackedCheckbox = document.getElementById(`morning-packed-${id}`);
+                
+                const itemData = {
+                    packed: packedCheckbox ? packedCheckbox.checked : false,
+                    morning: morningCheckbox ? morningCheckbox.checked : false,
+                    morningPacked: morningPackedCheckbox ? morningPackedCheckbox.checked : false
+                };
+
+                if (itemDiv.dataset.custom) {
+                    itemData.name = itemDiv.querySelector('span').textContent;
+                    state.customItems.push(itemData);
+                } else {
+                    state.items[id] = itemData;
+                }
+            });
+
+            localStorage.setItem(getStorageKey(), JSON.stringify(state));
+        }
+
+        function loadState() {
+            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+
+            // Load standard item states
+            for (const id in state.items) {
+                const packedCheckbox = document.getElementById(`packed-${id}`);
+                const morningCheckbox = document.getElementById(`morning-${id}`);
+                if (packedCheckbox && morningCheckbox) {
+                    packedCheckbox.checked = state.items[id].packed;
+                    morningCheckbox.checked = state.items[id].morning;
+                }
+            }
+
+            // Load custom item states and ensure they are added to the DOM before trying to set their states
+            // This part needs to be careful because populateChecklist might re-render custom items
+            // For custom items, we need to ensure they exist in the DOM before trying to load their state.
+            // The `populateChecklist` function already handles adding custom items from `state.customItems`
+            // so we just need to ensure their checkboxes are correctly set after they are created.
+            state.customItems.forEach((item, index) => {
+                const id = `custom-${index}`;
+                const packedCheckbox = document.getElementById(`packed-${id}`);
+                const morningCheckbox = document.getElementById(`morning-${id}`);
+                if (packedCheckbox && morningCheckbox) {
+                    packedCheckbox.checked = item.packed;
+                    morningCheckbox.checked = item.morning;
+                }
+            });
+
+            renderUIState(); // Call renderUIState to apply loaded states and update morning list
+        }
+
+        function applyFilter() {
+            const filter = document.getElementById('filter-packed').value;
+            
+            // Filter main checklist items
+            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
+                const id = itemDiv.id.replace('item-', '');
+                const packedCheckbox = document.getElementById(`packed-${id}`);
+                if (filter === 'unpacked' && packedCheckbox && packedCheckbox.checked) {
+                    itemDiv.classList.add('hidden-packed');
+                } else {
+                    itemDiv.classList.remove('hidden-packed');
+                }
+            });
+
+            // Filter 'Pack in AM' items
+            document.querySelectorAll('.morning-item').forEach(morningItemDiv => {
+                const id = morningItemDiv.id.replace('morning-item-', '');
+                const packedMorningCheckbox = document.getElementById(`morning-packed-${id}`);
+                if (filter === 'unpacked' && packedMorningCheckbox && packedMorningCheckbox.checked) {
+                    morningItemDiv.classList.add('hidden-packed');
+                } else {
+                    morningItemDiv.classList.remove('hidden-packed');
+                }
+            });
+        }
+
+        function resetChecklist() {
+            // Using a custom modal or confirmation message instead of alert/confirm
+            const confirmReset = confirm('Are you sure you want to reset all checks and custom items for this list? This cannot be undone.');
+            if (confirmReset) {
+                localStorage.removeItem(getStorageKey());
+                initialize();
+            }
+        }
+
+        function toggleSettings() {
+            const content = document.getElementById('settings-content');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
+
+    </script>
+</body>
+</html>
