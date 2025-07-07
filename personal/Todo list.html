@@ -221,8 +221,9 @@
 
         /**
          * Renders the entire application based on the current state.
+         * Optionally takes a `focusTargetId` to re-focus an element after re-render.
          */
-        function render() {
+        function render(focusTargetId = null) {
             hideCompletedToggle.checked = state.hideCompleted;
             checklistContainer.innerHTML = '';
 
@@ -241,6 +242,14 @@
             }
             
             applyHideCompletedFilter();
+
+            // Re-focus the element if a target ID was provided
+            if (focusTargetId) {
+                const elementToFocus = document.getElementById(focusTargetId);
+                if (elementToFocus) {
+                    elementToFocus.focus();
+                }
+            }
         }
 
         // --- Element Creation ---
@@ -270,7 +279,7 @@
                         ${checklist.tasks.map(createTaskElement).join('')}
                     </ul>
                     <form class="add-task-form flex gap-3">
-                        <input type="text" placeholder="Add a new task..." class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring">
+                        <input type="text" placeholder="Add a new task..." class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring" id="add-task-input-${checklist.id}">
                         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors focus-ring">Add</button>
                     </form>
                 </div>
@@ -357,9 +366,10 @@
                 e.preventDefault();
                 const input = e.target.querySelector('input[type="text"]');
                 const taskText = input.value.trim();
+                const currentChecklistId = e.target.closest('section').dataset.id;
+
                 if (taskText) {
-                    const checklistId = e.target.closest('section').dataset.id;
-                    const checklist = state.checklists.find(cl => cl.id === checklistId);
+                    const checklist = state.checklists.find(cl => cl.id === currentChecklistId);
                     const newTask = {
                         id: `t-${Date.now()}`,
                         text: taskText,
@@ -369,7 +379,10 @@
                     checklist.tasks.push(newTask);
                     input.value = '';
                     saveState();
-                    render();
+                    
+                    // Always focus the input field of the current checklist
+                    const focusTargetId = `add-task-input-${currentChecklistId}`;
+                    render(focusTargetId); // Pass the ID to render to re-focus after DOM update
                 }
             }
         });
