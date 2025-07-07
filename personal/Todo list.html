@@ -69,7 +69,7 @@
                     + Add Checklist
                 </button>
                 <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-700 transition-colors focus-ring">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </button>
             </div>
         </div>
@@ -98,14 +98,19 @@
         </div>
     </div>
 
-    <!-- Notes Editor Modal -->
-    <div id="notes-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <!-- Combined Edit Item Modal -->
+    <div id="edit-item-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
         <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-lg mx-4 flex flex-col">
-            <h3 class="text-lg font-bold mb-4 truncate" id="notes-modal-title">Edit Notes</h3>
-            <textarea id="notes-textarea" class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full h-48 mb-6" placeholder="Add your notes here..."></textarea>
+            <h3 class="text-lg font-bold mb-4" id="edit-item-modal-title">Edit Task</h3>
+            <label for="edit-item-input" class="text-gray-400 text-sm mb-1">Task Title:</label>
+            <input type="text" id="edit-item-input" class="bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full mb-4">
+            
+            <label for="edit-item-notes-textarea" class="text-gray-400 text-sm mb-1">Notes:</label>
+            <textarea id="edit-item-notes-textarea" class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full h-32 mb-6" placeholder="Add your notes here..."></textarea>
+            
             <div class="flex justify-end space-x-4">
-                <button id="notes-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Cancel</button>
-                <button id="notes-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Save</button>
+                <button id="edit-item-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Cancel</button>
+                <button id="edit-item-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Save</button>
             </div>
         </div>
     </div>
@@ -125,11 +130,13 @@
         const confirmModalConfirmBtn = document.getElementById('modal-confirm-btn');
         const confirmModalCancelBtn = document.getElementById('modal-cancel-btn');
 
-        const notesModal = document.getElementById('notes-modal');
-        const notesModalTitle = document.getElementById('notes-modal-title');
-        const notesTextarea = document.getElementById('notes-textarea');
-        const notesSaveBtn = document.getElementById('notes-save-btn');
-        const notesCancelBtn = document.getElementById('notes-cancel-btn');
+        // References for the new combined edit modal
+        const editItemModal = document.getElementById('edit-item-modal');
+        const editItemModalTitle = document.getElementById('edit-item-modal-title');
+        const editItemInput = document.getElementById('edit-item-input');
+        const editItemNotesTextarea = document.getElementById('edit-item-notes-textarea');
+        const editItemSaveBtn = document.getElementById('edit-item-save-btn');
+        const editItemCancelBtn = document.getElementById('edit-item-cancel-btn');
 
         // --- State Management ---
         let state = {
@@ -144,6 +151,7 @@
         /**
          * Loads state from localStorage or initializes with default data.
          * Ensures backward compatibility for tasks without a 'notes' property.
+         * Initializes with empty checklists if no saved state.
          */
         function loadState() {
             const savedState = localStorage.getItem(STORAGE_KEY);
@@ -160,25 +168,20 @@
                     }
                 });
             } else {
-                // Default state for a new user
+                // Default state for a new user: empty checklists with predefined titles
                 state = {
                     checklists: [
                         {
                             id: `cl-${Date.now()}`,
                             title: "Highest Priority Tasks",
                             isOpen: true,
-                            tasks: [
-                                { id: `t-${Date.now() + 1}`, text: "Plan the week's goals", completed: false, notes: "" },
-                                { id: `t-${Date.now() + 2}`, text: "Review project proposal", completed: true, notes: "The proposal is due on Friday. Need to check the budget section again." },
-                            ]
+                            tasks: [] // Initially empty
                         },
                         {
-                            id: `cl-${Date.now() + 3}`,
+                            id: `cl-${Date.now() + 1}`, // Ensure unique ID for the second checklist
                             title: "Additional Tasks",
                             isOpen: true,
-                            tasks: [
-                                { id: `t-${Date.now() + 4}`, text: "Schedule team meeting", completed: false, notes: "" },
-                            ]
+                            tasks: [] // Initially empty
                         }
                     ],
                     hideCompleted: false
@@ -254,16 +257,22 @@
 
         function createTaskElement(task) {
             const completedClass = task.completed ? 'opacity-50 line-through' : '';
-            const hasNotesClass = task.notes ? '' : 'hidden';
+            // Determine if the notes icon should be visible based on whether notes exist
+            const notesIconVisibilityClass = task.notes.trim() ? '' : 'hidden'; 
             return `
                 <li class="task-item flex items-center bg-gray-900 p-3 rounded-lg shadow ${completedClass}" data-id="${task.id}">
                     <input type="checkbox" class="task-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring mr-4 flex-shrink-0" ${task.completed ? 'checked' : ''}>
-                    <span class="flex-grow truncate">${task.text}</span>
+                    <span class="flex-grow truncate task-text-display">${task.text}</span>
                     <div class="flex items-center flex-shrink-0 ml-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 ${hasNotesClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        <button class="edit-notes-btn ml-2 p-1 rounded-full text-gray-400 hover:bg-indigo-700 hover:text-white transition-colors focus-ring">
+                        <!-- Notes icon - visible only if notes exist. Not clickable. -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 ${notesIconVisibilityClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        
+                        <!-- Edit Task Button (Pencil Icon) - now handles both text and notes editing -->
+                        <button class="edit-item-btn p-1 rounded-full text-gray-400 hover:bg-indigo-700 hover:text-white transition-colors focus-ring">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
                         </button>
+                        
+                        <!-- Delete Task Button -->
                         <button class="delete-task-btn ml-2 p-1 rounded-full text-gray-500 hover:bg-red-800 hover:text-white transition-colors focus-ring">
                              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         </button>
@@ -308,9 +317,9 @@
                 checklist.isOpen = !checklist.isOpen;
                 saveState();
                 render();
-            } else if (e.target.closest('.edit-notes-btn')) {
+            } else if (e.target.closest('.edit-item-btn')) { // Now handles both text and notes editing
                 const taskId = taskItem.dataset.id;
-                showNotesModal(checklistId, taskId);
+                showEditItemModal(checklistId, taskId);
             }
         });
 
@@ -404,7 +413,7 @@
             });
         });
 
-        // --- Modal Logic ---
+        // --- Confirmation Modal Logic ---
         let onConfirmCallback = null;
 
         function showConfirmationModal(message, onConfirm) {
@@ -425,35 +434,38 @@
 
         confirmModalCancelBtn.addEventListener('click', hideConfirmationModal);
 
-        // --- Notes Modal Logic ---
-        function showNotesModal(checklistId, taskId) {
+        // --- Combined Edit Item Modal Logic ---
+        function showEditItemModal(checklistId, taskId) {
             const checklist = state.checklists.find(cl => cl.id === checklistId);
             const task = checklist.tasks.find(t => t.id === taskId);
             
-            notesModalTitle.textContent = `Notes for: ${task.text}`;
-            notesTextarea.value = task.notes;
-            notesModal.dataset.checklistId = checklistId;
-            notesModal.dataset.taskId = taskId;
-            notesModal.classList.remove('hidden');
-            notesTextarea.focus();
+            editItemModalTitle.textContent = `Edit: ${task.text}`; // Set title dynamically
+            editItemInput.value = task.text;
+            editItemNotesTextarea.value = task.notes;
+            editItemModal.dataset.checklistId = checklistId;
+            editItemModal.dataset.taskId = taskId;
+            editItemModal.classList.remove('hidden');
+            editItemInput.focus();
         }
 
-        function hideNotesModal() {
-            notesModal.classList.add('hidden');
+        function hideEditItemModal() {
+            editItemModal.classList.add('hidden');
         }
 
-        notesSaveBtn.addEventListener('click', () => {
-            const { checklistId, taskId } = notesModal.dataset;
+        editItemSaveBtn.addEventListener('click', () => {
+            const { checklistId, taskId } = editItemModal.dataset;
             const checklist = state.checklists.find(cl => cl.id === checklistId);
             const task = checklist.tasks.find(t => t.id === taskId);
             
-            task.notes = notesTextarea.value.trim();
+            task.text = editItemInput.value.trim();
+            task.notes = editItemNotesTextarea.value.trim();
             saveState();
-            render();
-            hideNotesModal();
+            render(); // Re-render to update notes icon visibility
+            hideEditItemModal();
         });
 
-        notesCancelBtn.addEventListener('click', hideNotesModal);
+        editItemCancelBtn.addEventListener('click', hideEditItemModal);
+
 
         // --- Initial Load ---
         loadState();
