@@ -47,6 +47,24 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #6366f1; /* indigo-500 */
         }
+
+        /* Drag and Drop styles */
+        .task-item.dragging {
+            opacity: 0.4;
+        }
+
+        .task-list.drag-over-list {
+            outline: 2px dashed #6366f1; /* indigo-500 */
+            outline-offset: 4px;
+        }
+
+        .task-item.drag-over-top {
+            border-top: 3px solid #6366f1; /* indigo-500 */
+        }
+
+        .task-item.drag-over-bottom {
+            border-bottom: 3px solid #6366f1; /* indigo-500 */
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -145,6 +163,11 @@
         };
 
         const STORAGE_KEY = 'todoListState';
+
+        // --- Drag and Drop State ---
+        let draggedTaskData = null; // Stores { checklistId, taskId } of the item being dragged
+        let currentDropTarget = null; // Stores the DOM element currently being dragged over for visual feedback
+        let activeTouchTaskItem = null; // Reference to the task item being actively touched/dragged
 
         // --- Core Functions ---
 
@@ -261,6 +284,12 @@
             const notesIconVisibilityClass = task.notes.trim() ? '' : 'hidden'; 
             return `
                 <li class="task-item flex items-center bg-gray-900 p-3 rounded-lg shadow ${completedClass}" data-id="${task.id}">
+                    <!-- Drag Handle - now draggable="true" -->
+                    <button class="drag-handle p-1 rounded-full text-gray-500 hover:bg-gray-700 focus-ring mr-2 cursor-grab" draggable="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                     <input type="checkbox" class="task-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring mr-4 flex-shrink-0" ${task.completed ? 'checked' : ''}>
                     <span class="flex-grow truncate task-text-display">${task.text}</span>
                     <div class="flex items-center flex-shrink-0 ml-2">
@@ -317,7 +346,7 @@
                 checklist.isOpen = !checklist.isOpen;
                 saveState();
                 render();
-            } else if (e.target.closest('.edit-item-btn')) { // Now handles both text and notes editing
+            } else if (e.target.closest('.edit-item-btn')) { // Handles both text and notes editing
                 const taskId = taskItem.dataset.id;
                 showEditItemModal(checklistId, taskId);
             }
@@ -465,6 +494,181 @@
         });
 
         editItemCancelBtn.addEventListener('click', hideEditItemModal);
+
+        // --- Helper functions for Drag and Drop Visuals and Logic ---
+        function clearDragOverVisuals() {
+            document.querySelectorAll('.drag-over-top, .drag-over-bottom, .drag-over-list').forEach(el => {
+                el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-list');
+            });
+            currentDropTarget = null;
+        }
+
+        function handleDragOverVisuals(targetElement, clientY) {
+            if (targetElement && targetElement !== currentDropTarget) {
+                clearDragOverVisuals(); // Clear previous
+                currentDropTarget = targetElement; // Set new
+
+                if (targetElement.classList.contains('task-item')) {
+                    const rect = targetElement.getBoundingClientRect();
+                    const middle = rect.top + rect.height / 2;
+                    if (clientY < middle) {
+                        targetElement.classList.add('drag-over-top');
+                    } else {
+                        targetElement.classList.add('drag-over-bottom');
+                    }
+                } else if (targetElement.classList.contains('task-list')) {
+                    targetElement.classList.add('drag-over-list');
+                }
+            } else if (!targetElement && currentDropTarget) {
+                // If we've moved off a valid target, clear currentDropTarget and its classes
+                clearDragOverVisuals();
+            }
+        }
+
+        function handleDropLogic(dropTargetElement, clientY) {
+            const sourceChecklist = state.checklists.find(cl => cl.id === draggedTaskData.checklistId);
+            const draggedTaskIndex = sourceChecklist.tasks.findIndex(t => t.id === draggedTaskData.taskId);
+            const [taskToMove] = sourceChecklist.tasks.splice(draggedTaskIndex, 1);
+
+            let targetChecklist = null;
+            let targetIndex = -1;
+
+            if (dropTargetElement) {
+                const closestChecklistSection = dropTargetElement.closest('section');
+                if (closestChecklistSection) {
+                    targetChecklist = state.checklists.find(cl => cl.id === closestChecklistSection.dataset.id);
+
+                    if (dropTargetElement.classList.contains('task-item')) {
+                        const rect = dropTargetElement.getBoundingClientRect();
+                        const middle = rect.top + rect.height / 2;
+                        const dropIndex = targetChecklist.tasks.findIndex(t => t.id === dropTargetElement.dataset.id);
+
+                        if (clientY < middle) {
+                            targetIndex = dropIndex;
+                        } else {
+                            targetIndex = dropIndex + 1;
+                        }
+                    } else if (dropTargetElement.classList.contains('task-list')) {
+                        targetIndex = targetChecklist.tasks.length;
+                    }
+                }
+            }
+
+            // If no valid drop target found, or dropped outside any checklist, return to original place
+            if (!targetChecklist) {
+                sourceChecklist.tasks.splice(draggedTaskIndex, 0, taskToMove);
+            } else {
+                targetChecklist.tasks.splice(targetIndex, 0, taskToMove);
+            }
+
+            draggedTaskData = null;
+            saveState();
+            render();
+        }
+
+        // --- Mouse Drag and Drop Event Handlers ---
+        checklistContainer.addEventListener('dragstart', (e) => {
+            const dragHandle = e.target.closest('.drag-handle');
+            if (dragHandle) {
+                const taskItem = dragHandle.closest('.task-item');
+                if (taskItem) {
+                    const checklistId = taskItem.closest('section').dataset.id;
+                    const taskId = taskItem.dataset.id;
+                    draggedTaskData = { checklistId, taskId };
+                    e.dataTransfer.setData('text/plain', JSON.stringify(draggedTaskData));
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => {
+                        taskItem.classList.add('dragging');
+                    }, 0);
+                }
+            } else {
+                e.preventDefault(); // Prevent dragging if not initiated from the handle
+            }
+        });
+
+        checklistContainer.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Necessary to allow dropping
+            const targetElement = e.target.closest('.task-item') || e.target.closest('.task-list');
+            handleDragOverVisuals(targetElement, e.clientY);
+        });
+
+        checklistContainer.addEventListener('dragleave', (e) => {
+            if (currentDropTarget && !currentDropTarget.contains(e.relatedTarget)) {
+                clearDragOverVisuals();
+            }
+        });
+
+        checklistContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            clearDragOverVisuals();
+            if (!draggedTaskData) return;
+            handleDropLogic(e.target, e.clientY);
+        });
+
+        checklistContainer.addEventListener('dragend', (e) => {
+            const draggedElement = document.querySelector('.task-item.dragging');
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+            clearDragOverVisuals();
+            draggedTaskData = null;
+        });
+
+        // --- Touch Event Handlers for Drag and Drop ---
+        checklistContainer.addEventListener('touchstart', (e) => {
+            const dragHandle = e.target.closest('.drag-handle');
+            if (dragHandle) {
+                e.preventDefault(); // Prevent scrolling/zooming
+                const taskItem = dragHandle.closest('.task-item');
+                if (taskItem) {
+                    activeTouchTaskItem = taskItem;
+                    const checklistId = taskItem.closest('section').dataset.id;
+                    const taskId = taskItem.dataset.id;
+                    draggedTaskData = { checklistId, taskId };
+                    
+                    // Add a visual cue immediately
+                    taskItem.classList.add('dragging');
+                }
+            }
+        }, { passive: false }); // Use passive: false to allow preventDefault
+
+        checklistContainer.addEventListener('touchmove', (e) => {
+            if (activeTouchTaskItem) {
+                e.preventDefault(); // Prevent scrolling while dragging
+                const touch = e.touches[0];
+                // Use elementFromPoint to find the element under the touch
+                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                handleDragOverVisuals(targetElement, touch.clientY);
+            }
+        }, { passive: false });
+
+        checklistContainer.addEventListener('touchend', (e) => {
+            if (activeTouchTaskItem) {
+                const touch = e.changedTouches[0];
+                // Get the element at the final touch release point
+                const finalDropTargetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                clearDragOverVisuals(); // Clear visuals before processing drop
+                activeTouchTaskItem.classList.remove('dragging'); // Remove dragging class
+
+                if (draggedTaskData) { // Ensure there was a task being dragged
+                    handleDropLogic(finalDropTargetElement, touch.clientY);
+                }
+                
+                activeTouchTaskItem = null; // Reset active touch state
+                draggedTaskData = null; // Reset dragged task data
+            }
+        });
+
+        checklistContainer.addEventListener('touchcancel', (e) => {
+            // Clean up if the touch is interrupted (e.g., call, notification)
+            if (activeTouchTaskItem) {
+                activeTouchTaskItem.classList.remove('dragging');
+            }
+            clearDragOverVisuals();
+            activeTouchTaskItem = null;
+            draggedTaskData = null;
+        });
 
 
         // --- Initial Load ---
