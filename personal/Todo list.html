@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's To-Do List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using a modern, clean font */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        /* Custom focus ring for better accessibility and style */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        }
+        /* Style for contenteditable headers to indicate they are editable */
+        [contenteditable="true"]:hover {
+            background-color: #374151; /* gray-700 */
+            cursor: text;
+        }
+        [contenteditable="true"]:focus {
+            background-color: #1f2937; /* gray-800 */
+            outline: none;
+            box-shadow: 0 2px 0 0 #6366f1; /* indigo-500 */
+        }
+        /* Animation for tasks being added or removed */
+        .task-item {
+            transition: all 0.3s ease-in-out;
+        }
+        .task-enter {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        /* Custom scrollbar for a more integrated look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5; /* indigo-600 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1; /* indigo-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
+
+        <!-- Main Header -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-indigo-400 border-b-2 border-indigo-500 pb-4">Today's To-Do List</h1>
+        </header>
+
+        <!-- Global Controls -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div class="flex items-center space-x-3">
+                <input type="checkbox" id="hide-completed-toggle" class="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring">
+                <label for="hide-completed-toggle" class="font-medium">Hide Completed Tasks</label>
+            </div>
+            <div class="flex items-center gap-4">
+                 <button id="add-checklist-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus-ring">
+                    + Add Checklist
+                </button>
+                <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-700 transition-colors focus-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Settings Panel (hidden by default) -->
+        <div id="settings-panel" class="hidden bg-gray-800 p-4 rounded-lg mb-8">
+             <button id="clear-all-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors focus-ring">
+                Clear Entire Board
+            </button>
+        </div>
+
+        <!-- Main content area for checklists -->
+        <main id="checklist-container" class="space-y-8"></main>
+
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm mx-4">
+            <h3 class="text-lg font-bold mb-4" id="modal-title">Confirm Action</h3>
+            <p id="modal-body" class="mb-6">Are you sure you want to proceed? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="modal-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Cancel</button>
+                <button id="modal-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Editor Modal -->
+    <div id="notes-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-lg mx-4 flex flex-col">
+            <h3 class="text-lg font-bold mb-4 truncate" id="notes-modal-title">Edit Notes</h3>
+            <textarea id="notes-textarea" class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full h-48 mb-6" placeholder="Add your notes here..."></textarea>
+            <div class="flex justify-end space-x-4">
+                <button id="notes-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Cancel</button>
+                <button id="notes-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors focus-ring">Save</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Element References ---
+        const checklistContainer = document.getElementById('checklist-container');
+        const addChecklistBtn = document.getElementById('add-checklist-btn');
+        const hideCompletedToggle = document.getElementById('hide-completed-toggle');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        
+        const confirmModal = document.getElementById('confirmation-modal');
+        const confirmModalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const confirmModalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        const notesModal = document.getElementById('notes-modal');
+        const notesModalTitle = document.getElementById('notes-modal-title');
+        const notesTextarea = document.getElementById('notes-textarea');
+        const notesSaveBtn = document.getElementById('notes-save-btn');
+        const notesCancelBtn = document.getElementById('notes-cancel-btn');
+
+        // --- State Management ---
+        let state = {
+            checklists: [],
+            hideCompleted: false,
+        };
+
+        const STORAGE_KEY = 'todoListState';
+
+        // --- Core Functions ---
+
+        /**
+         * Loads state from localStorage or initializes with default data.
+         * Ensures backward compatibility for tasks without a 'notes' property.
+         */
+        function loadState() {
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            if (savedState) {
+                state = JSON.parse(savedState);
+                // Migration for backward compatibility: ensure all tasks have a notes property.
+                state.checklists.forEach(cl => {
+                    if (cl.tasks) {
+                        cl.tasks.forEach(t => {
+                            if (t.notes === undefined) {
+                                t.notes = '';
+                            }
+                        });
+                    }
+                });
+            } else {
+                // Default state for a new user
+                state = {
+                    checklists: [
+                        {
+                            id: `cl-${Date.now()}`,
+                            title: "Highest Priority Tasks",
+                            isOpen: true,
+                            tasks: [
+                                { id: `t-${Date.now() + 1}`, text: "Plan the week's goals", completed: false, notes: "" },
+                                { id: `t-${Date.now() + 2}`, text: "Review project proposal", completed: true, notes: "The proposal is due on Friday. Need to check the budget section again." },
+                            ]
+                        },
+                        {
+                            id: `cl-${Date.now() + 3}`,
+                            title: "Additional Tasks",
+                            isOpen: true,
+                            tasks: [
+                                { id: `t-${Date.now() + 4}`, text: "Schedule team meeting", completed: false, notes: "" },
+                            ]
+                        }
+                    ],
+                    hideCompleted: false
+                };
+            }
+        }
+
+        /**
+         * Saves the current state to localStorage.
+         */
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        /**
+         * Renders the entire application based on the current state.
+         */
+        function render() {
+            hideCompletedToggle.checked = state.hideCompleted;
+            checklistContainer.innerHTML = '';
+
+            if (state.checklists.length === 0) {
+                checklistContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-10">
+                        <p class="text-lg">Your board is empty.</p>
+                        <p>Click "+ Add Checklist" to get started!</p>
+                    </div>
+                `;
+            } else {
+                state.checklists.forEach(checklist => {
+                    const checklistEl = createChecklistElement(checklist);
+                    checklistContainer.appendChild(checklistEl);
+                });
+            }
+            
+            applyHideCompletedFilter();
+        }
+
+        // --- Element Creation ---
+
+        function createChecklistElement(checklist) {
+            const section = document.createElement('section');
+            section.className = 'bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6';
+            section.dataset.id = checklist.id;
+
+            const tasksVisibilityClass = checklist.isOpen ? '' : 'hidden';
+            const toggleIconPath = checklist.isOpen ? 'M19 9l-7 7-7-7' : 'M9 5l7 7-7 7';
+
+            section.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2 flex-grow min-w-0">
+                        <button class="toggle-visibility-btn p-1 rounded-full hover:bg-gray-700 focus-ring flex-shrink-0">
+                            <svg class="w-6 h-6 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${toggleIconPath}"></path></svg>
+                        </button>
+                        <h2 contenteditable="true" class="checklist-title text-2xl font-bold text-indigo-300 rounded-md px-2 py-1 w-full truncate">${checklist.title}</h2>
+                    </div>
+                    <button class="delete-checklist-btn p-2 rounded-full hover:bg-red-800 hover:text-white text-gray-400 transition-colors focus-ring flex-shrink-0">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                <div class="task-area ${tasksVisibilityClass}">
+                    <ul class="task-list space-y-3 mb-4">
+                        ${checklist.tasks.map(createTaskElement).join('')}
+                    </ul>
+                    <form class="add-task-form flex gap-3">
+                        <input type="text" placeholder="Add a new task..." class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors focus-ring">Add</button>
+                    </form>
+                </div>
+            `;
+            return section;
+        }
+
+        function createTaskElement(task) {
+            const completedClass = task.completed ? 'opacity-50 line-through' : '';
+            const hasNotesClass = task.notes ? '' : 'hidden';
+            return `
+                <li class="task-item flex items-center bg-gray-900 p-3 rounded-lg shadow ${completedClass}" data-id="${task.id}">
+                    <input type="checkbox" class="task-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring mr-4 flex-shrink-0" ${task.completed ? 'checked' : ''}>
+                    <span class="flex-grow truncate">${task.text}</span>
+                    <div class="flex items-center flex-shrink-0 ml-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 ${hasNotesClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <button class="edit-notes-btn ml-2 p-1 rounded-full text-gray-400 hover:bg-indigo-700 hover:text-white transition-colors focus-ring">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
+                        </button>
+                        <button class="delete-task-btn ml-2 p-1 rounded-full text-gray-500 hover:bg-red-800 hover:text-white transition-colors focus-ring">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                </li>
+            `;
+        }
+
+        // --- Event Handlers ---
+
+        checklistContainer.addEventListener('click', (e) => {
+            const taskItem = e.target.closest('.task-item');
+            const checklistEl = e.target.closest('section');
+            if (!checklistEl) return;
+            const checklistId = checklistEl.dataset.id;
+
+            if (e.target.matches('.task-checkbox')) {
+                const taskId = taskItem.dataset.id;
+                const checklist = state.checklists.find(cl => cl.id === checklistId);
+                const task = checklist.tasks.find(t => t.id === taskId);
+                task.completed = e.target.checked;
+                taskItem.classList.toggle('opacity-50', task.completed);
+                taskItem.classList.toggle('line-through', task.completed);
+                applyHideCompletedFilter();
+                saveState();
+            } else if (e.target.closest('.delete-task-btn')) {
+                const taskId = taskItem.dataset.id;
+                showConfirmationModal('Are you sure you want to delete this task?', () => {
+                    const checklist = state.checklists.find(cl => cl.id === checklistId);
+                    checklist.tasks = checklist.tasks.filter(t => t.id !== taskId);
+                    saveState();
+                    render();
+                });
+            } else if (e.target.closest('.delete-checklist-btn')) {
+                showConfirmationModal('Are you sure you want to delete this entire checklist?', () => {
+                    state.checklists = state.checklists.filter(cl => cl.id !== checklistId);
+                    saveState();
+                    render();
+                });
+            } else if (e.target.closest('.toggle-visibility-btn')) {
+                const checklist = state.checklists.find(cl => cl.id === checklistId);
+                checklist.isOpen = !checklist.isOpen;
+                saveState();
+                render();
+            } else if (e.target.closest('.edit-notes-btn')) {
+                const taskId = taskItem.dataset.id;
+                showNotesModal(checklistId, taskId);
+            }
+        });
+
+        checklistContainer.addEventListener('submit', (e) => {
+            if (e.target.matches('.add-task-form')) {
+                e.preventDefault();
+                const input = e.target.querySelector('input[type="text"]');
+                const taskText = input.value.trim();
+                if (taskText) {
+                    const checklistId = e.target.closest('section').dataset.id;
+                    const checklist = state.checklists.find(cl => cl.id === checklistId);
+                    const newTask = {
+                        id: `t-${Date.now()}`,
+                        text: taskText,
+                        completed: false,
+                        notes: ''
+                    };
+                    checklist.tasks.push(newTask);
+                    input.value = '';
+                    saveState();
+                    render();
+                }
+            }
+        });
+
+        checklistContainer.addEventListener('blur', (e) => {
+            if (e.target.matches('.checklist-title')) {
+                const newTitle = e.target.textContent.trim();
+                const checklistId = e.target.closest('section').dataset.id;
+                const checklist = state.checklists.find(cl => cl.id === checklistId);
+                if (newTitle && checklist.title !== newTitle) {
+                    checklist.title = newTitle;
+                    saveState();
+                } else {
+                    e.target.textContent = checklist.title;
+                }
+            }
+        }, true);
+
+        checklistContainer.addEventListener('keydown', (e) => {
+            if (e.target.matches('.checklist-title') && e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur();
+            }
+        });
+
+        addChecklistBtn.addEventListener('click', () => {
+            const newChecklist = {
+                id: `cl-${Date.now()}`,
+                title: "New Checklist",
+                isOpen: true,
+                tasks: []
+            };
+            state.checklists.push(newChecklist);
+            saveState();
+            render();
+            const newEl = checklistContainer.querySelector(`[data-id="${newChecklist.id}"] .checklist-title`);
+            if (newEl) {
+                newEl.focus();
+                document.execCommand('selectAll', false, null);
+            }
+        });
+
+        hideCompletedToggle.addEventListener('change', () => {
+            state.hideCompleted = hideCompletedToggle.checked;
+            applyHideCompletedFilter();
+            saveState();
+        });
+
+        function applyHideCompletedFilter() {
+            document.querySelectorAll('.task-item').forEach(item => {
+                const isCompleted = item.querySelector('.task-checkbox').checked;
+                if (state.hideCompleted && isCompleted) {
+                    item.classList.add('hidden');
+                } else {
+                    item.classList.remove('hidden');
+                }
+            });
+        }
+        
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            showConfirmationModal('Are you sure you want to clear the entire board?', () => {
+                localStorage.removeItem(STORAGE_KEY);
+                loadState();
+                render();
+                settingsPanel.classList.add('hidden');
+            });
+        });
+
+        // --- Modal Logic ---
+        let onConfirmCallback = null;
+
+        function showConfirmationModal(message, onConfirm) {
+            document.getElementById('modal-body').textContent = message;
+            onConfirmCallback = onConfirm;
+            confirmModal.classList.remove('hidden');
+        }
+
+        function hideConfirmationModal() {
+            confirmModal.classList.add('hidden');
+            onConfirmCallback = null;
+        }
+
+        confirmModalConfirmBtn.addEventListener('click', () => {
+            if (onConfirmCallback) onConfirmCallback();
+            hideConfirmationModal();
+        });
+
+        confirmModalCancelBtn.addEventListener('click', hideConfirmationModal);
+
+        // --- Notes Modal Logic ---
+        function showNotesModal(checklistId, taskId) {
+            const checklist = state.checklists.find(cl => cl.id === checklistId);
+            const task = checklist.tasks.find(t => t.id === taskId);
+            
+            notesModalTitle.textContent = `Notes for: ${task.text}`;
+            notesTextarea.value = task.notes;
+            notesModal.dataset.checklistId = checklistId;
+            notesModal.dataset.taskId = taskId;
+            notesModal.classList.remove('hidden');
+            notesTextarea.focus();
+        }
+
+        function hideNotesModal() {
+            notesModal.classList.add('hidden');
+        }
+
+        notesSaveBtn.addEventListener('click', () => {
+            const { checklistId, taskId } = notesModal.dataset;
+            const checklist = state.checklists.find(cl => cl.id === checklistId);
+            const task = checklist.tasks.find(t => t.id === taskId);
+            
+            task.notes = notesTextarea.value.trim();
+            saveState();
+            render();
+            hideNotesModal();
+        });
+
+        notesCancelBtn.addEventListener('click', hideNotesModal);
+
+        // --- Initial Load ---
+        loadState();
+        render();
+    });
+    </script>
+
+</body>
+</html>
