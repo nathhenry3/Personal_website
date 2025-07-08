@@ -508,6 +508,16 @@
 
         editItemCancelBtn.addEventListener('click', hideEditItemModal);
 
+        // New: Add keydown listener to the edit item input for saving on Enter
+        editItemInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent default Enter behavior (e.g., newline in input)
+                editItemSaveBtn.click(); // Programmatically click the save button
+            }
+        });
+
+        // No specific keydown listener needed for editItemNotesTextarea as default Enter behavior is newline.
+
         // --- Helper functions for Drag and Drop Visuals and Logic ---
         function clearDragOverVisuals() {
             document.querySelectorAll('.drag-over-top, .drag-over-bottom, .drag-over-list').forEach(el => {
