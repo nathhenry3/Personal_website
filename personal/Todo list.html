@@ -58,12 +58,13 @@
             outline-offset: 4px;
         }
 
-        .task-item.drag-over-top {
-            border-top: 3px solid #6366f1; /* indigo-500 */
-        }
-
-        .task-item.drag-over-bottom {
-            border-bottom: 3px solid #6366f1; /* indigo-500 */
+        /* New drop indicator style */
+        .drop-indicator {
+            background-color: #6366f1; /* indigo-500 */
+            height: 3px; /* Thicker line */
+            border-radius: 1.5px; /* Half of height for rounded caps */
+            margin: 4px 0; /* Space above and below */
+            transition: all 0.1s ease-out; /* Smooth appearance */
         }
     </style>
 </head>
@@ -168,6 +169,7 @@
         let draggedTaskData = null; // Stores { checklistId, taskId } of the item being dragged
         let currentDropTarget = null; // Stores the DOM element currently being dragged over for visual feedback
         let activeTouchTaskItem = null; // Reference to the task item being actively touched/dragged
+        let dropIndicator = null; // Global reference for the dynamically created drop indicator
 
         // --- Core Functions ---
 
@@ -519,36 +521,74 @@
         // No specific keydown listener needed for editItemNotesTextarea as default Enter behavior is newline.
 
         // --- Helper functions for Drag and Drop Visuals and Logic ---
+        function createDropIndicator() {
+            if (!dropIndicator) {
+                dropIndicator = document.createElement('div');
+                dropIndicator.className = 'drop-indicator'; // Class for styling
+            }
+            return dropIndicator;
+        }
+
         function clearDragOverVisuals() {
-            document.querySelectorAll('.drag-over-top, .drag-over-bottom, .drag-over-list').forEach(el => {
-                el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-list');
+            // Remove the drop indicator if it exists
+            if (dropIndicator && dropIndicator.parentNode) {
+                dropIndicator.parentNode.removeChild(dropIndicator);
+            }
+            // Remove list highlight
+            document.querySelectorAll('.drag-over-list').forEach(el => {
+                el.classList.remove('drag-over-list');
             });
             currentDropTarget = null;
         }
 
-        function handleDragOverVisuals(targetElement, clientY) {
-            if (targetElement && targetElement !== currentDropTarget) {
-                clearDragOverVisuals(); // Clear previous
-                currentDropTarget = targetElement; // Set new
+        function handleDragOverVisuals(targetElement, clientX, clientY) {
+            clearDragOverVisuals(); // Always clear previous visuals first
 
-                if (targetElement.classList.contains('task-item')) {
-                    const rect = targetElement.getBoundingClientRect();
-                    const middle = rect.top + rect.height / 2;
-                    if (clientY < middle) {
-                        targetElement.classList.add('drag-over-top');
-                    } else {
-                        targetElement.classList.add('drag-over-bottom');
-                    }
-                } else if (targetElement.classList.contains('task-list')) {
-                    targetElement.classList.add('drag-over-list');
+            if (!targetElement) {
+                return; // No valid target
+            }
+
+            const indicator = createDropIndicator();
+
+            if (targetElement.classList.contains('task-item')) {
+                const rect = targetElement.getBoundingClientRect();
+                const middle = rect.top + rect.height / 2; // Midpoint for insertion logic
+
+                if (clientY < middle) {
+                    // Insert indicator before the target task
+                    targetElement.parentNode.insertBefore(indicator, targetElement);
+                } else {
+                    // Insert indicator after the target task
+                    targetElement.parentNode.insertBefore(indicator, targetElement.nextSibling);
                 }
-            } else if (!targetElement && currentDropTarget) {
-                // If we've moved off a valid target, clear currentDropTarget and its classes
-                clearDragOverVisuals();
+                currentDropTarget = targetElement; // Set currentDropTarget to the task item
+            } else if (targetElement.classList.contains('task-list')) {
+                // If dropping into an empty list or at the end of a list
+                targetElement.classList.add('drag-over-list'); // Highlight the list itself
+                // If the list is empty, append the indicator directly to it
+                if (targetElement.children.length === 0 || (targetElement.children.length === 1 && targetElement.children[0].classList.contains('dragging'))) {
+                     targetElement.appendChild(indicator);
+                } else {
+                    // For non-empty lists, we still want to show the indicator at the end if not over a specific item
+                    const lastChild = targetElement.lastElementChild;
+                    if (lastChild && !lastChild.classList.contains('dragging')) { // Avoid placing indicator after the dragged item itself
+                        targetElement.appendChild(indicator);
+                    }
+                }
+                currentDropTarget = targetElement; // Set currentDropTarget to the task list
             }
         }
 
-        function handleDropLogic(dropTargetElement, clientY) {
+        function handleDropLogic(clientX, clientY) {
+            // Ensure cleanup happens first
+            clearDragOverVisuals();
+            const draggedElement = document.querySelector('.task-item.dragging');
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+
+            if (!draggedTaskData) return;
+
             const sourceChecklist = state.checklists.find(cl => cl.id === draggedTaskData.checklistId);
             const draggedTaskIndex = sourceChecklist.tasks.findIndex(t => t.id === draggedTaskData.taskId);
             const [taskToMove] = sourceChecklist.tasks.splice(draggedTaskIndex, 1);
@@ -556,24 +596,32 @@
             let targetChecklist = null;
             let targetIndex = -1;
 
-            if (dropTargetElement) {
-                const closestChecklistSection = dropTargetElement.closest('section');
-                if (closestChecklistSection) {
-                    targetChecklist = state.checklists.find(cl => cl.id === closestChecklistSection.dataset.id);
+            // Use elementFromPoint to find the precise element at the drop point
+            const finalDropTargetElement = document.elementFromPoint(clientX, clientY);
 
-                    if (dropTargetElement.classList.contains('task-item')) {
-                        const rect = dropTargetElement.getBoundingClientRect();
-                        const middle = rect.top + rect.height / 2;
-                        const dropIndex = targetChecklist.tasks.findIndex(t => t.id === dropTargetElement.dataset.id);
+            if (finalDropTargetElement) {
+                const closestTaskItem = finalDropTargetElement.closest('.task-item');
+                const closestTaskList = finalDropTargetElement.closest('.task-list');
+                const closestChecklistSection = finalDropTargetElement.closest('section');
 
-                        if (clientY < middle) {
-                            targetIndex = dropIndex;
-                        } else {
-                            targetIndex = dropIndex + 1;
-                        }
-                    } else if (dropTargetElement.classList.contains('task-list')) {
-                        targetIndex = targetChecklist.tasks.length;
+                if (closestTaskItem) {
+                    targetChecklist = state.checklists.find(cl => cl.id === closestTaskItem.closest('section').dataset.id);
+                    const rect = closestTaskItem.getBoundingClientRect();
+                    const middle = rect.top + rect.height / 2;
+                    const dropIndex = targetChecklist.tasks.findIndex(t => t.id === closestTaskItem.dataset.id);
+
+                    if (clientY < middle) {
+                        targetIndex = dropIndex;
+                    } else {
+                        targetIndex = dropIndex + 1;
                     }
+                } else if (closestTaskList) {
+                    targetChecklist = state.checklists.find(cl => cl.id === closestTaskList.closest('section').dataset.id);
+                    targetIndex = targetChecklist.tasks.length; // Append to the end of the list
+                } else if (closestChecklistSection) {
+                    // Dropped somewhere in the checklist section but not on a task or task list directly
+                    targetChecklist = state.checklists.find(cl => cl.id === closestChecklistSection.dataset.id);
+                    targetIndex = targetChecklist.tasks.length; // Append to the end of this checklist
                 }
             }
 
@@ -612,10 +660,11 @@
         checklistContainer.addEventListener('dragover', (e) => {
             e.preventDefault(); // Necessary to allow dropping
             const targetElement = e.target.closest('.task-item') || e.target.closest('.task-list');
-            handleDragOverVisuals(targetElement, e.clientY);
+            handleDragOverVisuals(targetElement, e.clientX, e.clientY);
         });
 
         checklistContainer.addEventListener('dragleave', (e) => {
+            // Only remove classes if leaving the *current* drop target and not entering a child of it
             if (currentDropTarget && !currentDropTarget.contains(e.relatedTarget)) {
                 clearDragOverVisuals();
             }
@@ -623,9 +672,7 @@
 
         checklistContainer.addEventListener('drop', (e) => {
             e.preventDefault();
-            clearDragOverVisuals();
-            if (!draggedTaskData) return;
-            handleDropLogic(e.target, e.clientY);
+            handleDropLogic(e.clientX, e.clientY);
         });
 
         checklistContainer.addEventListener('dragend', (e) => {
@@ -661,7 +708,7 @@
                 const touch = e.touches[0];
                 // Use elementFromPoint to find the element under the touch
                 const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                handleDragOverVisuals(targetElement, touch.clientY);
+                handleDragOverVisuals(targetElement, touch.clientX, touch.clientY);
             }
         }, { passive: false });
 
@@ -669,13 +716,12 @@
             if (activeTouchTaskItem) {
                 const touch = e.changedTouches[0];
                 // Get the element at the final touch release point
-                const finalDropTargetElement = document.elementFromPoint(touch.clientX, touch.clientY);
                 
                 clearDragOverVisuals(); // Clear visuals before processing drop
                 activeTouchTaskItem.classList.remove('dragging'); // Remove dragging class
 
                 if (draggedTaskData) { // Ensure there was a task being dragged
-                    handleDropLogic(finalDropTargetElement, touch.clientY);
+                    handleDropLogic(touch.clientX, touch.clientY);
                 }
                 
                 activeTouchTaskItem = null; // Reset active touch state
