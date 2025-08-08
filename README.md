@@ -1,6 +1,6 @@
 README
 
-Personal website for academic stuff, blogging, etc. Will see how it evolves.
+Personal website for academic branding and simulation hub. Will see how it evolves.
 
         Note: Change tags for Papers, Talks, and Projects by editing the YAML
     Step 15: Change what appears in header menu *by editing config/_default/menus.toml*
