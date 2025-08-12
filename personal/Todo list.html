@@ -48,23 +48,26 @@
             background: #6366f1; /* indigo-500 */
         }
 
-        /* Drag and Drop styles */
+        /* --- Drag and Drop styles --- */
         .task-item.dragging {
             opacity: 0.4;
         }
 
         .task-list.drag-over-list {
+            /* Add a subtle background to the list being dragged over */
+            background-color: rgba(99, 102, 241, 0.1);
             outline: 2px dashed #6366f1; /* indigo-500 */
             outline-offset: 4px;
         }
 
-        /* New drop indicator style */
+        /* New drop indicator style: thicker and more obvious */
         .drop-indicator {
             background-color: #6366f1; /* indigo-500 */
-            height: 3px; /* Thicker line */
-            border-radius: 1.5px; /* Half of height for rounded caps */
-            margin: 4px 0; /* Space above and below */
-            transition: all 0.1s ease-out; /* Smooth appearance */
+            height: 3px;
+            border-radius: 1.5px;
+            margin: 4px 0;
+            /* The indicator should not interfere with mouse events */
+            pointer-events: none; 
         }
     </style>
 </head>
@@ -149,7 +152,6 @@
         const confirmModalConfirmBtn = document.getElementById('modal-confirm-btn');
         const confirmModalCancelBtn = document.getElementById('modal-cancel-btn');
 
-        // References for the new combined edit modal
         const editItemModal = document.getElementById('edit-item-modal');
         const editItemModalTitle = document.getElementById('edit-item-modal-title');
         const editItemInput = document.getElementById('edit-item-input');
@@ -162,80 +164,47 @@
             checklists: [],
             hideCompleted: false,
         };
-
         const STORAGE_KEY = 'todoListState';
 
         // --- Drag and Drop State ---
         let draggedTaskData = null; // Stores { checklistId, taskId } of the item being dragged
-        let currentDropTarget = null; // Stores the DOM element currently being dragged over for visual feedback
+        let currentDropTargetList = null; // Stores the task list element currently being dragged over
         let activeTouchTaskItem = null; // Reference to the task item being actively touched/dragged
         let dropIndicator = null; // Global reference for the dynamically created drop indicator
 
         // --- Core Functions ---
-
-        /**
-         * Loads state from localStorage or initializes with default data.
-         * Ensures backward compatibility for tasks without a 'notes' property.
-         * Initializes with empty checklists if no saved state.
-         */
         function loadState() {
             const savedState = localStorage.getItem(STORAGE_KEY);
             if (savedState) {
                 state = JSON.parse(savedState);
-                // Migration for backward compatibility: ensure all tasks have a notes property.
                 state.checklists.forEach(cl => {
                     if (cl.tasks) {
                         cl.tasks.forEach(t => {
-                            if (t.notes === undefined) {
-                                t.notes = '';
-                            }
+                            if (t.notes === undefined) t.notes = '';
                         });
                     }
                 });
             } else {
-                // Default state for a new user: empty checklists with predefined titles
                 state = {
                     checklists: [
-                        {
-                            id: `cl-${Date.now()}`,
-                            title: "Highest Priority Tasks",
-                            isOpen: true,
-                            tasks: [] // Initially empty
-                        },
-                        {
-                            id: `cl-${Date.now() + 1}`, // Ensure unique ID for the second checklist
-                            title: "Additional Tasks",
-                            isOpen: true,
-                            tasks: [] // Initially empty
-                        }
+                        { id: `cl-${Date.now()}`, title: "Highest Priority Tasks", isOpen: true, tasks: [] },
+                        { id: `cl-${Date.now() + 1}`, title: "Additional Tasks", isOpen: true, tasks: [] }
                     ],
                     hideCompleted: false
                 };
             }
         }
 
-        /**
-         * Saves the current state to localStorage.
-         */
         function saveState() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
 
-        /**
-         * Renders the entire application based on the current state.
-         * Optionally takes a `focusTargetId` to re-focus an element after re-render.
-         */
         function render(focusTargetId = null) {
             hideCompletedToggle.checked = state.hideCompleted;
             checklistContainer.innerHTML = '';
 
             if (state.checklists.length === 0) {
-                checklistContainer.innerHTML = `
-                    <div class="text-center text-gray-500 py-10">
-                        <p class="text-lg">Your board is empty.</p>
-                        <p>Click "+ Add Checklist" to get started!</p>
-                    </div>
-                `;
+                checklistContainer.innerHTML = `<div class="text-center text-gray-500 py-10"><p class="text-lg">Your board is empty.</p><p>Click "+ Add Checklist" to get started!</p></div>`;
             } else {
                 state.checklists.forEach(checklist => {
                     const checklistEl = createChecklistElement(checklist);
@@ -245,17 +214,13 @@
             
             applyHideCompletedFilter();
 
-            // Re-focus the element if a target ID was provided
             if (focusTargetId) {
                 const elementToFocus = document.getElementById(focusTargetId);
-                if (elementToFocus) {
-                    elementToFocus.focus();
-                }
+                if (elementToFocus) elementToFocus.focus();
             }
         }
 
         // --- Element Creation ---
-
         function createChecklistElement(checklist) {
             const section = document.createElement('section');
             section.className = 'bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6';
@@ -291,28 +256,19 @@
 
         function createTaskElement(task) {
             const completedClass = task.completed ? 'opacity-50 line-through' : '';
-            // Determine if the notes icon should be visible based on whether notes exist
             const notesIconVisibilityClass = task.notes.trim() ? '' : 'hidden'; 
             return `
-                <li class="task-item flex items-center bg-gray-900 p-3 rounded-lg shadow ${completedClass}" data-id="${task.id}">
-                    <!-- Drag Handle - now draggable="true" -->
-                    <button class="drag-handle p-1 rounded-full text-gray-500 hover:bg-gray-700 focus-ring mr-2 cursor-grab" draggable="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                        </svg>
+                <li class="task-item flex items-center bg-gray-900 p-3 rounded-lg shadow ${completedClass}" data-id="${task.id}" draggable="true">
+                    <button class="drag-handle p-1 rounded-full text-gray-500 hover:bg-gray-700 focus-ring mr-2 cursor-grab">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
                     </button>
-                    <input type="checkbox" class="task-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring mr-4 flex-shrink-0" ${task.completed ? 'checked' : ''}>
+                    <input type="checkbox" class="task-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600 focus-ring mr-4 flex-shrink-0">
                     <span class="flex-grow truncate task-text-display">${task.text}</span>
                     <div class="flex items-center flex-shrink-0 ml-2">
-                        <!-- Notes icon - visible only if notes exist. Not clickable. -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 ${notesIconVisibilityClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        
-                        <!-- Edit Task Button (Pencil Icon) - now handles both text and notes editing -->
                         <button class="edit-item-btn p-1 rounded-full text-gray-400 hover:bg-indigo-700 hover:text-white transition-colors focus-ring">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
                         </button>
-                        
-                        <!-- Delete Task Button -->
                         <button class="delete-task-btn ml-2 p-1 rounded-full text-gray-500 hover:bg-red-800 hover:text-white transition-colors focus-ring">
                              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         </button>
@@ -322,7 +278,6 @@
         }
 
         // --- Event Handlers ---
-
         checklistContainer.addEventListener('click', (e) => {
             const taskItem = e.target.closest('.task-item');
             const checklistEl = e.target.closest('section');
@@ -357,7 +312,7 @@
                 checklist.isOpen = !checklist.isOpen;
                 saveState();
                 render();
-            } else if (e.target.closest('.edit-item-btn')) { // Handles both text and notes editing
+            } else if (e.target.closest('.edit-item-btn')) {
                 const taskId = taskItem.dataset.id;
                 showEditItemModal(checklistId, taskId);
             }
@@ -372,19 +327,11 @@
 
                 if (taskText) {
                     const checklist = state.checklists.find(cl => cl.id === currentChecklistId);
-                    const newTask = {
-                        id: `t-${Date.now()}`,
-                        text: taskText,
-                        completed: false,
-                        notes: ''
-                    };
+                    const newTask = { id: `t-${Date.now()}`, text: taskText, completed: false, notes: '' };
                     checklist.tasks.push(newTask);
                     input.value = '';
                     saveState();
-                    
-                    // Always focus the input field of the current checklist
-                    const focusTargetId = `add-task-input-${currentChecklistId}`;
-                    render(focusTargetId); // Pass the ID to render to re-focus after DOM update
+                    render(`add-task-input-${currentChecklistId}`);
                 }
             }
         });
@@ -411,12 +358,7 @@
         });
 
         addChecklistBtn.addEventListener('click', () => {
-            const newChecklist = {
-                id: `cl-${Date.now()}`,
-                title: "New Checklist",
-                isOpen: true,
-                tasks: []
-            };
+            const newChecklist = { id: `cl-${Date.now()}`, title: "New Checklist", isOpen: true, tasks: [] };
             state.checklists.push(newChecklist);
             saveState();
             render();
@@ -436,17 +378,11 @@
         function applyHideCompletedFilter() {
             document.querySelectorAll('.task-item').forEach(item => {
                 const isCompleted = item.querySelector('.task-checkbox').checked;
-                if (state.hideCompleted && isCompleted) {
-                    item.classList.add('hidden');
-                } else {
-                    item.classList.remove('hidden');
-                }
+                item.classList.toggle('hidden', state.hideCompleted && isCompleted);
             });
         }
         
-        settingsBtn.addEventListener('click', () => {
-            settingsPanel.classList.toggle('hidden');
-        });
+        settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('hidden'));
 
         clearAllBtn.addEventListener('click', () => {
             showConfirmationModal('Are you sure you want to clear the entire board?', () => {
@@ -457,33 +393,28 @@
             });
         });
 
-        // --- Confirmation Modal Logic ---
+        // --- Modal Logic ---
         let onConfirmCallback = null;
-
         function showConfirmationModal(message, onConfirm) {
             document.getElementById('modal-body').textContent = message;
             onConfirmCallback = onConfirm;
             confirmModal.classList.remove('hidden');
         }
-
         function hideConfirmationModal() {
             confirmModal.classList.add('hidden');
             onConfirmCallback = null;
         }
-
         confirmModalConfirmBtn.addEventListener('click', () => {
             if (onConfirmCallback) onConfirmCallback();
             hideConfirmationModal();
         });
-
         confirmModalCancelBtn.addEventListener('click', hideConfirmationModal);
 
-        // --- Combined Edit Item Modal Logic ---
         function showEditItemModal(checklistId, taskId) {
             const checklist = state.checklists.find(cl => cl.id === checklistId);
             const task = checklist.tasks.find(t => t.id === taskId);
             
-            editItemModalTitle.textContent = `Edit: ${task.text}`; // Set title dynamically
+            editItemModalTitle.textContent = `Edit: ${task.text}`;
             editItemInput.value = task.text;
             editItemNotesTextarea.value = task.notes;
             editItemModal.dataset.checklistId = checklistId;
@@ -491,11 +422,9 @@
             editItemModal.classList.remove('hidden');
             editItemInput.focus();
         }
-
         function hideEditItemModal() {
             editItemModal.classList.add('hidden');
         }
-
         editItemSaveBtn.addEventListener('click', () => {
             const { checklistId, taskId } = editItemModal.dataset;
             const checklist = state.checklists.find(cl => cl.id === checklistId);
@@ -504,241 +433,223 @@
             task.text = editItemInput.value.trim();
             task.notes = editItemNotesTextarea.value.trim();
             saveState();
-            render(); // Re-render to update notes icon visibility
+            render();
             hideEditItemModal();
         });
-
         editItemCancelBtn.addEventListener('click', hideEditItemModal);
-
-        // New: Add keydown listener to the edit item input for saving on Enter
         editItemInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Prevent default Enter behavior (e.g., newline in input)
-                editItemSaveBtn.click(); // Programmatically click the save button
+                e.preventDefault();
+                editItemSaveBtn.click();
             }
         });
 
-        // No specific keydown listener needed for editItemNotesTextarea as default Enter behavior is newline.
+        // --- NEW Drag and Drop Logic ---
 
-        // --- Helper functions for Drag and Drop Visuals and Logic ---
+        /**
+         * Creates the visual indicator for where a task will be dropped.
+         */
         function createDropIndicator() {
             if (!dropIndicator) {
                 dropIndicator = document.createElement('div');
-                dropIndicator.className = 'drop-indicator'; // Class for styling
+                dropIndicator.className = 'drop-indicator';
             }
             return dropIndicator;
         }
 
-        function clearDragOverVisuals() {
-            // Remove the drop indicator if it exists
+        /**
+         * Cleans up all visual cues related to dragging (indicator, list highlighting).
+         */
+        function clearDragVisuals() {
             if (dropIndicator && dropIndicator.parentNode) {
                 dropIndicator.parentNode.removeChild(dropIndicator);
             }
-            // Remove list highlight
             document.querySelectorAll('.drag-over-list').forEach(el => {
                 el.classList.remove('drag-over-list');
             });
-            currentDropTarget = null;
+            currentDropTargetList = null;
         }
-
-        function handleDragOverVisuals(targetElement, clientX, clientY) {
-            clearDragOverVisuals(); // Always clear previous visuals first
-
-            if (!targetElement) {
-                return; // No valid target
-            }
-
-            const indicator = createDropIndicator();
-
-            if (targetElement.classList.contains('task-item')) {
-                const rect = targetElement.getBoundingClientRect();
-                const middle = rect.top + rect.height / 2; // Midpoint for insertion logic
-
-                if (clientY < middle) {
-                    // Insert indicator before the target task
-                    targetElement.parentNode.insertBefore(indicator, targetElement);
-                } else {
-                    // Insert indicator after the target task
-                    targetElement.parentNode.insertBefore(indicator, targetElement.nextSibling);
-                }
-                currentDropTarget = targetElement; // Set currentDropTarget to the task item
-            } else if (targetElement.classList.contains('task-list')) {
-                // If dropping into an empty list or at the end of a list
-                targetElement.classList.add('drag-over-list'); // Highlight the list itself
-                // If the list is empty, append the indicator directly to it
-                if (targetElement.children.length === 0 || (targetElement.children.length === 1 && targetElement.children[0].classList.contains('dragging'))) {
-                     targetElement.appendChild(indicator);
-                } else {
-                    // For non-empty lists, we still want to show the indicator at the end if not over a specific item
-                    const lastChild = targetElement.lastElementChild;
-                    if (lastChild && !lastChild.classList.contains('dragging')) { // Avoid placing indicator after the dragged item itself
-                        targetElement.appendChild(indicator);
-                    }
-                }
-                currentDropTarget = targetElement; // Set currentDropTarget to the task list
-            }
-        }
-
-        function handleDropLogic(clientX, clientY) {
-            // Ensure cleanup happens first
-            clearDragOverVisuals();
+        
+        /**
+         * Centralized function to clean up the entire drag-and-drop state.
+         */
+        function cleanupDragState() {
+            clearDragVisuals();
             const draggedElement = document.querySelector('.task-item.dragging');
             if (draggedElement) {
                 draggedElement.classList.remove('dragging');
             }
+            draggedTaskData = null;
+            activeTouchTaskItem = null;
+        }
 
+        /**
+         * Determines which existing task the dragged task should be placed before.
+         * This creates a more intuitive "magnetic" feel.
+         * @param {HTMLElement} container - The task list element.
+         * @param {number} y - The vertical coordinate of the cursor/touch.
+         * @returns {HTMLElement|null} The element to insert before, or null to append at the end.
+         */
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        /**
+         * Handles the core logic of moving the task in the state array after a drop.
+         * It's now coordinate-independent and relies on the position of the drop indicator.
+         */
+        function handleDropLogic() {
             if (!draggedTaskData) return;
 
+            const indicator = document.querySelector('.drop-indicator');
+            const targetListElement = indicator ? indicator.closest('.task-list') : null;
+            
             const sourceChecklist = state.checklists.find(cl => cl.id === draggedTaskData.checklistId);
             const draggedTaskIndex = sourceChecklist.tasks.findIndex(t => t.id === draggedTaskData.taskId);
+
+            // If drop is invalid (no list or task not found), just cleanup and re-render.
+            if (!targetListElement || draggedTaskIndex === -1) {
+                cleanupDragState();
+                render();
+                return;
+            }
+
+            // 1. Remove task from its original position in the state.
             const [taskToMove] = sourceChecklist.tasks.splice(draggedTaskIndex, 1);
 
-            let targetChecklist = null;
-            let targetIndex = -1;
-
-            // Use elementFromPoint to find the precise element at the drop point
-            const finalDropTargetElement = document.elementFromPoint(clientX, clientY);
-
-            if (finalDropTargetElement) {
-                const closestTaskItem = finalDropTargetElement.closest('.task-item');
-                const closestTaskList = finalDropTargetElement.closest('.task-list');
-                const closestChecklistSection = finalDropTargetElement.closest('section');
-
-                if (closestTaskItem) {
-                    targetChecklist = state.checklists.find(cl => cl.id === closestTaskItem.closest('section').dataset.id);
-                    const rect = closestTaskItem.getBoundingClientRect();
-                    const middle = rect.top + rect.height / 2;
-                    const dropIndex = targetChecklist.tasks.findIndex(t => t.id === closestTaskItem.dataset.id);
-
-                    if (clientY < middle) {
-                        targetIndex = dropIndex;
-                    } else {
-                        targetIndex = dropIndex + 1;
-                    }
-                } else if (closestTaskList) {
-                    targetChecklist = state.checklists.find(cl => cl.id === closestTaskList.closest('section').dataset.id);
-                    targetIndex = targetChecklist.tasks.length; // Append to the end of the list
-                } else if (closestChecklistSection) {
-                    // Dropped somewhere in the checklist section but not on a task or task list directly
-                    targetChecklist = state.checklists.find(cl => cl.id === closestChecklistSection.dataset.id);
-                    targetIndex = targetChecklist.tasks.length; // Append to the end of this checklist
-                }
-            }
-
-            // If no valid drop target found, or dropped outside any checklist, return to original place
-            if (!targetChecklist) {
-                sourceChecklist.tasks.splice(draggedTaskIndex, 0, taskToMove);
+            // 2. Find the target checklist and the correct insertion index.
+            const targetChecklistId = targetListElement.closest('section').dataset.id;
+            const targetChecklist = state.checklists.find(cl => cl.id === targetChecklistId);
+            const nextTaskElement = indicator.nextElementSibling;
+            
+            let targetIndex;
+            if (nextTaskElement) {
+                const nextTaskId = nextTaskElement.dataset.id;
+                targetIndex = targetChecklist.tasks.findIndex(t => t.id === nextTaskId);
+                if (targetIndex === -1) targetIndex = targetChecklist.tasks.length;
             } else {
-                targetChecklist.tasks.splice(targetIndex, 0, taskToMove);
+                targetIndex = targetChecklist.tasks.length; // Appending to the end.
             }
 
-            draggedTaskData = null;
+            // 3. Insert the task into its new position in the state.
+            targetChecklist.tasks.splice(targetIndex, 0, taskToMove);
+            
+            // 4. Finalize by cleaning up, saving, and re-rendering.
+            cleanupDragState();
             saveState();
             render();
         }
+        
+        /**
+         * Handles the continuous visual feedback during a drag operation.
+         * @param {HTMLElement} taskList - The list being dragged over.
+         * @param {number} clientY - The vertical coordinate of the cursor/touch.
+         */
+        function handleDragVisuals(taskList, clientY) {
+            if (!taskList) return;
 
-        // --- Mouse Drag and Drop Event Handlers ---
-        checklistContainer.addEventListener('dragstart', (e) => {
-            const dragHandle = e.target.closest('.drag-handle');
-            if (dragHandle) {
-                const taskItem = dragHandle.closest('.task-item');
-                if (taskItem) {
-                    const checklistId = taskItem.closest('section').dataset.id;
-                    const taskId = taskItem.dataset.id;
-                    draggedTaskData = { checklistId, taskId };
-                    e.dataTransfer.setData('text/plain', JSON.stringify(draggedTaskData));
-                    e.dataTransfer.effectAllowed = 'move';
-                    setTimeout(() => {
-                        taskItem.classList.add('dragging');
-                    }, 0);
-                }
+            // If moving to a new list, clear visuals from the old one.
+            if (currentDropTargetList && currentDropTargetList !== taskList) {
+                clearDragVisuals();
+            }
+            currentDropTargetList = taskList;
+            taskList.classList.add('drag-over-list');
+            
+            const afterElement = getDragAfterElement(taskList, clientY);
+            const indicator = createDropIndicator();
+
+            if (afterElement == null) {
+                taskList.appendChild(indicator);
             } else {
-                e.preventDefault(); // Prevent dragging if not initiated from the handle
+                taskList.insertBefore(indicator, afterElement);
+            }
+        }
+
+        // --- Event Listeners for Drag and Drop ---
+
+        checklistContainer.addEventListener('dragstart', (e) => {
+            const taskItem = e.target.closest('.task-item');
+            // Ensure dragging starts on the task item itself or its handle
+            if (taskItem && (e.target.classList.contains('task-item') || e.target.closest('.drag-handle'))) {
+                const checklistId = taskItem.closest('section').dataset.id;
+                draggedTaskData = { checklistId, taskId: taskItem.dataset.id };
+                e.dataTransfer.effectAllowed = 'move';
+                // Add dragging class with a slight delay to allow the browser to create a drag image
+                setTimeout(() => taskItem.classList.add('dragging'), 0);
+            } else {
+                // Prevent dragging from other elements like input fields or buttons
+                e.preventDefault();
             }
         });
 
         checklistContainer.addEventListener('dragover', (e) => {
-            e.preventDefault(); // Necessary to allow dropping
-            const targetElement = e.target.closest('.task-item') || e.target.closest('.task-list');
-            handleDragOverVisuals(targetElement, e.clientX, e.clientY);
+            e.preventDefault(); // This is necessary to allow a drop.
+            const taskList = e.target.closest('.task-list');
+            handleDragVisuals(taskList, e.clientY);
         });
 
         checklistContainer.addEventListener('dragleave', (e) => {
-            // Only remove classes if leaving the *current* drop target and not entering a child of it
-            if (currentDropTarget && !currentDropTarget.contains(e.relatedTarget)) {
-                clearDragOverVisuals();
+            // If the mouse leaves the list container entirely, clear the visuals.
+            if (e.target.classList.contains('task-list') && !e.target.contains(e.relatedTarget)) {
+                clearDragVisuals();
             }
         });
 
         checklistContainer.addEventListener('drop', (e) => {
             e.preventDefault();
-            handleDropLogic(e.clientX, e.clientY);
+            handleDropLogic();
         });
 
-        checklistContainer.addEventListener('dragend', (e) => {
-            const draggedElement = document.querySelector('.task-item.dragging');
-            if (draggedElement) {
-                draggedElement.classList.remove('dragging');
-            }
-            clearDragOverVisuals();
-            draggedTaskData = null;
+        checklistContainer.addEventListener('dragend', () => {
+            // dragend fires after drop, so this cleans up if the drag was cancelled (e.g., Esc key).
+            cleanupDragState();
         });
 
-        // --- Touch Event Handlers for Drag and Drop ---
+        // --- Touch Event Handlers ---
         checklistContainer.addEventListener('touchstart', (e) => {
             const dragHandle = e.target.closest('.drag-handle');
             if (dragHandle) {
-                e.preventDefault(); // Prevent scrolling/zooming
                 const taskItem = dragHandle.closest('.task-item');
                 if (taskItem) {
                     activeTouchTaskItem = taskItem;
                     const checklistId = taskItem.closest('section').dataset.id;
-                    const taskId = taskItem.dataset.id;
-                    draggedTaskData = { checklistId, taskId };
-                    
-                    // Add a visual cue immediately
+                    draggedTaskData = { checklistId, taskId: taskItem.dataset.id };
                     taskItem.classList.add('dragging');
                 }
             }
-        }, { passive: false }); // Use passive: false to allow preventDefault
+        }, { passive: true }); // Use passive: true where possible
 
         checklistContainer.addEventListener('touchmove', (e) => {
             if (activeTouchTaskItem) {
                 e.preventDefault(); // Prevent scrolling while dragging
                 const touch = e.touches[0];
-                // Use elementFromPoint to find the element under the touch
-                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                handleDragOverVisuals(targetElement, touch.clientX, touch.clientY);
+                // Find what's under the finger
+                const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                const taskList = elementUnderTouch ? elementUnderTouch.closest('.task-list') : null;
+                handleDragVisuals(taskList, touch.clientY);
             }
-        }, { passive: false });
+        }, { passive: false }); // Must be false to allow preventDefault
 
-        checklistContainer.addEventListener('touchend', (e) => {
+        checklistContainer.addEventListener('touchend', () => {
             if (activeTouchTaskItem) {
-                const touch = e.changedTouches[0];
-                // Get the element at the final touch release point
-                
-                clearDragOverVisuals(); // Clear visuals before processing drop
-                activeTouchTaskItem.classList.remove('dragging'); // Remove dragging class
-
-                if (draggedTaskData) { // Ensure there was a task being dragged
-                    handleDropLogic(touch.clientX, touch.clientY);
-                }
-                
-                activeTouchTaskItem = null; // Reset active touch state
-                draggedTaskData = null; // Reset dragged task data
+                handleDropLogic(); // The logic is the same for touch and mouse
             }
         });
 
-        checklistContainer.addEventListener('touchcancel', (e) => {
-            // Clean up if the touch is interrupted (e.g., call, notification)
-            if (activeTouchTaskItem) {
-                activeTouchTaskItem.classList.remove('dragging');
-            }
-            clearDragOverVisuals();
-            activeTouchTaskItem = null;
-            draggedTaskData = null;
+        checklistContainer.addEventListener('touchcancel', () => {
+            // Clean up if the touch is interrupted
+            cleanupDragState();
         });
-
 
         // --- Initial Load ---
         loadState();
