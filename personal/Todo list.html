@@ -69,6 +69,19 @@
             /* The indicator should not interfere with mouse events */
             pointer-events: none; 
         }
+
+        /* --- Undo Notification Styles --- */
+        #undo-notification {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            pointer-events: none;
+        }
+        #undo-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -108,7 +121,7 @@
 
     </div>
 
-    <!-- Confirmation Modal -->
+    <!-- Confirmation Modal (for checklists and clear all) -->
     <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
         <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm mx-4">
             <h3 class="text-lg font-bold mb-4" id="modal-title">Confirm Action</h3>
@@ -137,6 +150,12 @@
         </div>
     </div>
 
+    <!-- Undo Notification -->
+    <div id="undo-notification" class="fixed bottom-5 right-5 bg-gray-700 text-white py-3 px-5 rounded-lg shadow-lg flex items-center justify-between">
+        <span id="undo-message">Task deleted.</span>
+        <button id="undo-btn" class="ml-4 font-bold text-indigo-400 hover:text-indigo-300 focus-ring">Undo</button>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -159,18 +178,23 @@
         const editItemSaveBtn = document.getElementById('edit-item-save-btn');
         const editItemCancelBtn = document.getElementById('edit-item-cancel-btn');
 
+        const undoNotification = document.getElementById('undo-notification');
+        const undoBtn = document.getElementById('undo-btn');
+
         // --- State Management ---
         let state = {
             checklists: [],
             hideCompleted: false,
         };
         const STORAGE_KEY = 'todoListState';
+        let undoState = null;
+        let undoTimeout = null;
 
         // --- Drag and Drop State ---
-        let draggedTaskData = null; // Stores { checklistId, taskId } of the item being dragged
-        let currentDropTargetList = null; // Stores the task list element currently being dragged over
-        let activeTouchTaskItem = null; // Reference to the task item being actively touched/dragged
-        let dropIndicator = null; // Global reference for the dynamically created drop indicator
+        let draggedTaskData = null; 
+        let currentDropTargetList = null; 
+        let activeTouchTaskItem = null; 
+        let dropIndicator = null; 
 
         // --- Core Functions ---
         function loadState() {
@@ -295,12 +319,19 @@
                 saveState();
             } else if (e.target.closest('.delete-task-btn')) {
                 const taskId = taskItem.dataset.id;
-                showConfirmationModal('Are you sure you want to delete this task?', () => {
-                    const checklist = state.checklists.find(cl => cl.id === checklistId);
-                    checklist.tasks = checklist.tasks.filter(t => t.id !== taskId);
+                const checklist = state.checklists.find(cl => cl.id === checklistId);
+                const taskIndex = checklist.tasks.findIndex(t => t.id === taskId);
+                if (taskIndex > -1) {
+                    const [deletedTask] = checklist.tasks.splice(taskIndex, 1);
+                    undoState = {
+                        task: deletedTask,
+                        checklistId: checklistId,
+                        originalIndex: taskIndex
+                    };
                     saveState();
                     render();
-                });
+                    showUndoNotification();
+                }
             } else if (e.target.closest('.delete-checklist-btn')) {
                 showConfirmationModal('Are you sure you want to delete this entire checklist?', () => {
                     state.checklists = state.checklists.filter(cl => cl.id !== checklistId);
@@ -393,7 +424,7 @@
             });
         });
 
-        // --- Modal Logic ---
+        // --- Modal & Notification Logic ---
         let onConfirmCallback = null;
         function showConfirmationModal(message, onConfirm) {
             document.getElementById('modal-body').textContent = message;
@@ -444,11 +475,34 @@
             }
         });
 
-        // --- NEW Drag and Drop Logic ---
+        function showUndoNotification() {
+            clearTimeout(undoTimeout);
+            undoNotification.classList.add('show');
+            undoTimeout = setTimeout(() => {
+                hideUndoNotification();
+            }, 5000);
+        }
 
-        /**
-         * Creates the visual indicator for where a task will be dropped.
-         */
+        function hideUndoNotification() {
+            undoNotification.classList.remove('show');
+            // We don't clear undoState here, allowing the timer to expire naturally
+        }
+
+        undoBtn.addEventListener('click', () => {
+            if (undoState) {
+                const checklist = state.checklists.find(cl => cl.id === undoState.checklistId);
+                if (checklist) {
+                    checklist.tasks.splice(undoState.originalIndex, 0, undoState.task);
+                    saveState();
+                    render();
+                }
+                undoState = null;
+                clearTimeout(undoTimeout);
+                hideUndoNotification();
+            }
+        });
+
+        // --- NEW Drag and Drop Logic ---
         function createDropIndicator() {
             if (!dropIndicator) {
                 dropIndicator = document.createElement('div');
@@ -457,9 +511,6 @@
             return dropIndicator;
         }
 
-        /**
-         * Cleans up all visual cues related to dragging (indicator, list highlighting).
-         */
         function clearDragVisuals() {
             if (dropIndicator && dropIndicator.parentNode) {
                 dropIndicator.parentNode.removeChild(dropIndicator);
@@ -470,9 +521,6 @@
             currentDropTargetList = null;
         }
         
-        /**
-         * Centralized function to clean up the entire drag-and-drop state.
-         */
         function cleanupDragState() {
             clearDragVisuals();
             const draggedElement = document.querySelector('.task-item.dragging');
@@ -483,13 +531,6 @@
             activeTouchTaskItem = null;
         }
 
-        /**
-         * Determines which existing task the dragged task should be placed before.
-         * This creates a more intuitive "magnetic" feel.
-         * @param {HTMLElement} container - The task list element.
-         * @param {number} y - The vertical coordinate of the cursor/touch.
-         * @returns {HTMLElement|null} The element to insert before, or null to append at the end.
-         */
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
 
@@ -504,10 +545,6 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        /**
-         * Handles the core logic of moving the task in the state array after a drop.
-         * It's now coordinate-independent and relies on the position of the drop indicator.
-         */
         function handleDropLogic() {
             if (!draggedTaskData) return;
 
@@ -517,17 +554,14 @@
             const sourceChecklist = state.checklists.find(cl => cl.id === draggedTaskData.checklistId);
             const draggedTaskIndex = sourceChecklist.tasks.findIndex(t => t.id === draggedTaskData.taskId);
 
-            // If drop is invalid (no list or task not found), just cleanup and re-render.
             if (!targetListElement || draggedTaskIndex === -1) {
                 cleanupDragState();
                 render();
                 return;
             }
 
-            // 1. Remove task from its original position in the state.
             const [taskToMove] = sourceChecklist.tasks.splice(draggedTaskIndex, 1);
 
-            // 2. Find the target checklist and the correct insertion index.
             const targetChecklistId = targetListElement.closest('section').dataset.id;
             const targetChecklist = state.checklists.find(cl => cl.id === targetChecklistId);
             const nextTaskElement = indicator.nextElementSibling;
@@ -538,27 +572,19 @@
                 targetIndex = targetChecklist.tasks.findIndex(t => t.id === nextTaskId);
                 if (targetIndex === -1) targetIndex = targetChecklist.tasks.length;
             } else {
-                targetIndex = targetChecklist.tasks.length; // Appending to the end.
+                targetIndex = targetChecklist.tasks.length;
             }
 
-            // 3. Insert the task into its new position in the state.
             targetChecklist.tasks.splice(targetIndex, 0, taskToMove);
             
-            // 4. Finalize by cleaning up, saving, and re-rendering.
             cleanupDragState();
             saveState();
             render();
         }
         
-        /**
-         * Handles the continuous visual feedback during a drag operation.
-         * @param {HTMLElement} taskList - The list being dragged over.
-         * @param {number} clientY - The vertical coordinate of the cursor/touch.
-         */
         function handleDragVisuals(taskList, clientY) {
             if (!taskList) return;
 
-            // If moving to a new list, clear visuals from the old one.
             if (currentDropTargetList && currentDropTargetList !== taskList) {
                 clearDragVisuals();
             }
@@ -576,30 +602,25 @@
         }
 
         // --- Event Listeners for Drag and Drop ---
-
         checklistContainer.addEventListener('dragstart', (e) => {
             const taskItem = e.target.closest('.task-item');
-            // Ensure dragging starts on the task item itself or its handle
             if (taskItem && (e.target.classList.contains('task-item') || e.target.closest('.drag-handle'))) {
                 const checklistId = taskItem.closest('section').dataset.id;
                 draggedTaskData = { checklistId, taskId: taskItem.dataset.id };
                 e.dataTransfer.effectAllowed = 'move';
-                // Add dragging class with a slight delay to allow the browser to create a drag image
                 setTimeout(() => taskItem.classList.add('dragging'), 0);
             } else {
-                // Prevent dragging from other elements like input fields or buttons
                 e.preventDefault();
             }
         });
 
         checklistContainer.addEventListener('dragover', (e) => {
-            e.preventDefault(); // This is necessary to allow a drop.
+            e.preventDefault();
             const taskList = e.target.closest('.task-list');
             handleDragVisuals(taskList, e.clientY);
         });
 
         checklistContainer.addEventListener('dragleave', (e) => {
-            // If the mouse leaves the list container entirely, clear the visuals.
             if (e.target.classList.contains('task-list') && !e.target.contains(e.relatedTarget)) {
                 clearDragVisuals();
             }
@@ -611,7 +632,6 @@
         });
 
         checklistContainer.addEventListener('dragend', () => {
-            // dragend fires after drop, so this cleans up if the drag was cancelled (e.g., Esc key).
             cleanupDragState();
         });
 
@@ -627,27 +647,25 @@
                     taskItem.classList.add('dragging');
                 }
             }
-        }, { passive: true }); // Use passive: true where possible
+        }, { passive: true });
 
         checklistContainer.addEventListener('touchmove', (e) => {
             if (activeTouchTaskItem) {
-                e.preventDefault(); // Prevent scrolling while dragging
+                e.preventDefault();
                 const touch = e.touches[0];
-                // Find what's under the finger
                 const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
                 const taskList = elementUnderTouch ? elementUnderTouch.closest('.task-list') : null;
                 handleDragVisuals(taskList, touch.clientY);
             }
-        }, { passive: false }); // Must be false to allow preventDefault
+        }, { passive: false });
 
         checklistContainer.addEventListener('touchend', () => {
             if (activeTouchTaskItem) {
-                handleDropLogic(); // The logic is the same for touch and mouse
+                handleDropLogic();
             }
         });
 
         checklistContainer.addEventListener('touchcancel', () => {
-            // Clean up if the touch is interrupted
             cleanupDragState();
         });
 
