@@ -134,10 +134,12 @@
 
     <!-- Combined Edit Item Modal -->
     <div id="edit-item-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-lg mx-4 flex flex-col">
+        <!-- MODIFICATION: Changed max-w-lg to max-w-2xl to make the modal wider -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col">
             <h3 class="text-lg font-bold mb-4" id="edit-item-modal-title">Edit Task</h3>
             <label for="edit-item-input" class="text-gray-400 text-sm mb-1">Task Title:</label>
-            <input type="text" id="edit-item-input" class="bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full mb-4">
+            <!-- MODIFICATION: Changed input to textarea and added rows attribute -->
+            <textarea id="edit-item-input" class="bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full mb-4" rows="3"></textarea>
             
             <label for="edit-item-notes-textarea" class="text-gray-400 text-sm mb-1">Notes:</label>
             <textarea id="edit-item-notes-textarea" class="flex-grow bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2 focus:border-indigo-500 focus-ring w-full h-32 mb-6" placeholder="Add your notes here..."></textarea>
@@ -538,7 +540,9 @@
         });
         editItemCancelBtn.addEventListener('click', hideEditItemModal);
         editItemInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { // Allow shift+enter for newlines in edit mode
+            // The existing keydown listener for the edit input already handles Shift+Enter for new lines,
+            // which now works as expected with a textarea.
+            if (e.key === 'Enter' && !e.shiftKey) { 
                 e.preventDefault();
                 editItemSaveBtn.click();
             }
