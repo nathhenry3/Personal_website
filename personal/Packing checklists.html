@@ -3,636 +3,843 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel & Camping Checklist</title>
+    <title>Nathan & Michelle's Packing List</title>
     <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2a2a2e;
+            --section-bg: #333;
+            --text-main: #e0e0e0;
+            --text-dim: #bbb;
+            --accent: #7b8ff3;
+            --accent-hover: #98a9f5;
+            --morning-border: #f0ad4e;
+            --morning-bg: #3a362e;
+            --success: #5cb85c;
+            --danger: #c9302c;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            padding-bottom: 80px; /* Space for bottom actions */
             font-size: 16px;
         }
-        h1, h2, h3 {
-            color: #7b8ff3;
-            border-bottom: 2px solid #7b8ff3;
-            padding-bottom: 10px;
+
+        /* Sticky Progress Bar */
+        .progress-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--bg-color);
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .progress-bar-bg {
+            background-color: #444;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--success);
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #2a2a2e;
+        }
+
+        h1 {
+            color: var(--accent);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.8em;
+        }
+
+        /* Controls */
+        .controls-card {
+            background-color: var(--card-bg);
+            padding: 15px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        .instructions {
-            margin-bottom: 25px;
-            list-style-type: disc;
-            padding-left: 20px;
-            color: #bbb;
-        }
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        .controls-container {
+            margin-bottom: 20px;
             display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
             flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 140px;
+        }
+
         .control-group label {
-            font-weight: bold;
-            margin-right: 10px;
+            font-size: 0.85em;
+            color: var(--text-dim);
+            margin-bottom: 5px;
         }
+
         select {
-            padding: 8px 12px;
-            border-radius: 5px;
-            border: 1px solid #7b8ff3;
-            background-color: #333;
-            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--accent);
+            background-color: var(--section-bg);
+            color: var(--text-main);
             font-size: 1em;
-            cursor: pointer;
+            width: 100%;
         }
-        select:focus {
-            outline: none;
-            border-color: #98a9f5;
-        }
+
+        /* Morning Pack Section */
         .morning-pack-container {
-            border: 2px dashed #f0ad4e;
+            border: 2px dashed var(--morning-border);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 25px;
-            background-color: #3a362e;
+            background-color: var(--morning-bg);
+            animation: fadeIn 0.3s ease;
         }
+
         .morning-pack-container h3 {
-            color: #f0ad4e;
-            border-color: #f0ad4e;
-            margin-top: 0;
-        }
-        .category-section {
-            background-color: #333;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .category-section h3 {
-            margin-top: 0;
-            font-size: 1.2em;
-        }
-        .checklist-item, .morning-item {
-            display: grid;
-            grid-template-columns: 1fr auto;
+            color: var(--morning-border);
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 10px 5px;
+            gap: 10px;
+        }
+
+        /* Categories (Accordion) */
+        .category-section {
+            background-color: var(--section-bg);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .category-header {
+            padding: 15px;
+            background-color: #3d3d3d;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .category-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--text-main);
+        }
+
+        .category-header .arrow {
+            transition: transform 0.3s ease;
+            fill: var(--text-dim);
+        }
+
+        .category-section.collapsed .arrow {
+            transform: rotate(-90deg);
+        }
+
+        .category-section.collapsed .item-list {
+            display: none;
+        }
+
+        .item-list {
+            padding: 5px 15px 15px 15px;
+        }
+
+        /* List Items */
+        .checklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
             border-bottom: 1px solid #444;
         }
-        .morning-item {
-            grid-template-columns: auto 1fr;
-        }
+
         .checklist-item:last-child {
             border-bottom: none;
         }
-        .checklist-item > span, .morning-item > span {
-            grid-column: 1;
+
+        .item-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            cursor: pointer;
         }
-        .morning-item > span {
-            grid-column: 2;
+
+        .item-text {
+            line-height: 1.4;
         }
-        .checklist-item .checkbox-group {
-            grid-column: 2;
+
+        .item-text.completed {
+            text-decoration: line-through;
+            color: #777;
+        }
+
+        /* Checkbox Styling */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--accent);
+            border-radius: 4px;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--accent);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            left: 4px;
+            top: 0px;
+        }
+
+        /* Item Actions */
+        .item-actions {
             display: flex;
             align-items: center;
             gap: 15px;
-            white-space: nowrap;
-            font-size: 0.9em;
         }
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #7b8ff3;
-            cursor: pointer;
-        }
-        .checkbox-group label {
-            font-weight: normal;
-            color: #ccc;
+
+        .am-toggle {
+            font-size: 0.8em;
+            color: var(--text-dim);
             display: flex;
             align-items: center;
             gap: 5px;
             cursor: pointer;
+            background: rgba(0,0,0,0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
-        .completed {
-            text-decoration: line-through;
-            color: #777;
-        }
-        .hidden-packed {
-            display: none !important;
-        }
-        .morning-item .checkbox-packed {
-            grid-column: 1;
-        }
-        .add-item-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #333;
-            border-radius: 8px;
-        }
-        .add-item-section h3 {
-            margin-top: 0;
-        }
-        .add-item-section input[type="text"] {
-            width: calc(100% - 130px);
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #7b8ff3;
-            background-color: #2a2a2e;
-            color: #e0e0e0;
-            font-size: 1em;
-            margin-right: 10px;
-        }
-        .button {
-            padding: 10px 15px;
+
+        .delete-btn {
+            background: none;
             border: none;
-            border-radius: 5px;
+            color: var(--danger);
             cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            color: white;
-            transition: background-color 0.2s;
+            padding: 5px;
+            opacity: 0.7;
         }
-        .add-button {
-            background-color: #5cb85c;
+
+        .delete-btn:hover {
+            opacity: 1;
         }
-        .add-button:hover {
-            background-color: #4cae4c;
-        }
-        .reset-button {
-            background-color: #c9302c;
-        }
-        .reset-button:hover {
-            background-color: #d9534f;
-        }
-        .settings-toggle {
-            cursor: pointer;
-            font-weight: bold;
-            color: #7b8ff3;
-            display: inline-block;
+
+        /* Add Item Section */
+        .add-item-section {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
             margin-top: 30px;
-            padding: 8px;
-            border: 1px dashed #7b8ff3;
-            border-radius: 5px;
         }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--accent);
+            background-color: var(--bg-color);
+            color: white;
+            font-size: 16px; /* Prevents iOS zoom */
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary { background-color: var(--success); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-secondary { background-color: #555; }
+        .btn:hover { opacity: 0.9; }
+
+        /* Settings Area */
+        .settings-area {
+            margin-top: 40px;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+
+        .settings-header {
+            cursor: pointer;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+
         .settings-content {
             display: none;
             margin-top: 15px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
         }
-        
-        /* Mobile optimization */
+
+        .settings-content.open {
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 600px) {
             .checklist-item {
-                grid-template-columns: 1fr;
-                gap: 5px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
-            .checklist-item .checkbox-group {
-                grid-column: 1;
+            .item-actions {
+                width: 100%;
                 justify-content: space-between;
-                margin-top: 5px;
-            }
-            .add-item-section input[type="text"] {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-            .add-button {
-                width: 100%;
+                padding-left: 32px; /* Align with text */
+                box-sizing: border-box;
             }
         }
     </style>
 </head>
 <body>
 
+    <!-- Canvas for celebration -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Sticky Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-label">
+            <span id="progress-text">Packed: 0%</span>
+            <span id="items-count">0/0</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div id="progress-fill" class="progress-bar-fill"></div>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>Nathan & Michelle's Travel Checklist</h1>
+        <h1>Nathan & Michelle's List</h1>
 
-        <ul class="instructions">
-            <li>Select your destination type (e.g., Overseas) to generate a packing list.</li>
-            <li>Use the "Pack in AM" checkbox for items used on departure morning (e.g., toiletries, fruit); they appear in the top yellow box.</li>
-            <li>Add custom items at the bottom if needed.</li>
-        </ul>
-
-        <div class="controls-container">
+        <div class="controls-card">
             <div class="control-group">
-                <label for="checklist-type">Checklist Type:</label>
-                <select id="checklist-type" onchange="handleChecklistChange()">
+                <label>Trip Type</label>
+                <select id="checklist-type" onchange="switchListType()">
+                    <option value="overseas">Overseas Travel</option>
                     <option value="camping">Camping</option>
                     <option value="local">Local Travel</option>
-                    <option value="overseas">Overseas Travel</option>
                 </select>
             </div>
             <div class="control-group">
-                <label for="filter-packed">View:</label>
-                <select id="filter-packed" onchange="handleFilterChange()">
+                <label>Filter</label>
+                <select id="filter-view" onchange="renderList()">
                     <option value="all">Show All</option>
                     <option value="unpacked">Hide Packed</option>
                 </select>
             </div>
         </div>
 
-        <div id="morning-pack-container" class="morning-pack-container" style="display: none;">
-            <h3>To Pack in the Morning</h3>
+        <div id="morning-section" class="morning-pack-container hidden">
+            <h3>
+                <span>☀️</span> Pack in the Morning
+            </h3>
             <div id="morning-list"></div>
         </div>
 
-        <div id="checklist-container"></div>
-        
+        <div id="main-list-container">
+            <!-- Categories generate here -->
+        </div>
+
         <div class="add-item-section">
             <h3>Add Custom Item</h3>
-            <div style="display: flex; flex-wrap: wrap;">
-                <input type="text" id="custom-item-input" placeholder="e.g., Yoga ball">
-                <button class="button add-button" onclick="addCustomItem()">Add Item</button>
+            <div class="input-group">
+                <input type="text" id="custom-input" placeholder="e.g., Yoga ball">
+                <button class="btn btn-primary" onclick="addCustomItem()">Add</button>
             </div>
         </div>
 
-        <div class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</div>
-        <div class="settings-content" id="settings-content">
-            <button class="button reset-button" onclick="resetChecklist()">Reset Current Checklist</button>
+        <div class="settings-area">
+            <div class="settings-header" onclick="toggleSettings()">
+                <span>⚙️ Options & Data</span>
+            </div>
+            <div id="settings-content" class="settings-content">
+                <p style="margin-top:0; color: #bbb; font-size: 0.9em;">
+                    Use "Export" to save a file you can send to your partner. Use "Import" to load their file.
+                </p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="exportData()">⬇ Export Data</button>
+                    <button class="btn btn-secondary" onclick="triggerImport()">⬆ Import Data</button>
+                    <input type="file" id="import-file" style="display:none" onchange="importData(this)">
+                    <button class="btn btn-danger" onclick="resetList()">Reset List</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const checklistData = {
+        // --- DATA ---
+        const defaultData = {
             camping: {
-                "Shelter & Sleeping": [
-                    "Tent, poles, stakes", "Tent footprint/groundsheet", "Tarp", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress", "Tent repair kit", "Mallet/hammer"
-                ],
-                "Cooking & Kitchen": [
-                    "Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs)", "Plates, bowls, cutlery", "Mugs", "Cooler / Esky", "Ice/Gel packs", "Water bottles", "Water purification", "Dish soap (biodegradable) & sponge", "Trash bags", "Paper towels", "Ziploc bags", "Can/Bottle opener", "Coffee/tea maker", "Cutting board", "Knife set", "Oil & Spices", "Thermos", "Fire extinguisher"
-                ],
-                "Clothing": [
-                    "Base layers", "Fleece/Insulated jacket", "Rain jacket & pants", "Hiking pants/shorts", "Underwear & Socks (wool/synthetic)", "Thermals", "Pajamas", "Warm Hat & Gloves", "Camp shoes (sandals)", "Hiking boots", "Laundry bag"
-                ],
-                "Safety & First Aid": [
-                    "First-aid kit (blister care, antiseptic)", "Headlamps/Flashlights (extra batteries)", "Power bank", "Map/Compass/GPS", "Multi-tool/Knife", "Lighter/Matches/Fire starter", "Insect repellent", "Sunscreen"
-                ],
-                "Hygiene": [
-                    "Toiletries (Toothbrush/paste)", "Quick-dry towel", "Hand sanitizer", "Toilet paper", "Trowel (for digging cat holes)", "Biodegradable soap", "Meds"
-                ],
-                "Baby Gear": [
-                    "Portable crib / Pack-n-play", "Baby sleeping bag", "Baby carrier (hiking)", "Outdoor blanket/Play mat", "Sun hat", "Baby sunscreen", "Diapers & Wipes", "Changing pad", "Diaper bags", "Bottles/Formula/Food", "Sippy cup", "High chair", "Meds (Thermometer, Panadol)", "Toys/Books", "Bibs"
-                ],
-                "Miscellaneous": [
-                    "Camp chairs", "Table", "Duct tape", "Games/Books", "Camera", "Binoculars"
-                ]
+                "Shelter & Sleep": ["Tent, poles, stakes", "Tent footprint", "Tarp", "Sleeping bags", "Sleeping pads/Air mattress", "Pillows", "Pump", "Tent repair kit", "Mallet"],
+                "Kitchen": ["Stove & fuel", "Pots/pans", "Utensils", "Plates/bowls/cutlery", "Mugs", "Cooler/Esky", "Ice packs", "Water bottles", "Dish soap & sponge", "Trash bags", "Paper towels", "Ziploc bags", "Coffee maker", "Cutting board/Knife", "Oil & Spices", "Thermos", "Lighter/Matches"],
+                "Clothing": ["Base layers", "Fleece/Jacket", "Rain gear", "Hiking pants/shorts", "Underwear/Socks", "Thermals", "Pajamas", "Warm Hat/Gloves", "Camp sandals", "Hiking boots"],
+                "Safety": ["First-aid kit", "Headlamps (batteries)", "Power bank", "Insect repellent", "Sunscreen", "Multi-tool"],
+                "Hygiene": ["Toothbrush/paste", "Quick-dry towel", "Sanitizer", "Toilet paper", "Trowel", "Biodegradable soap", "Meds"],
+                "Baby Gear": ["Portacot", "Baby sleeping bag", "Baby carrier", "Outdoor mat", "Sun hat/screen", "Diapers/Wipes", "Bottles/Food", "High chair chair", "Meds/Thermometer", "Toys"]
             },
             local: {
-                "Essentials": [
-                    "Wallet (ID, cards)", "Keys", "Phone & Charger", "Power bank", "Meds", "First-aid kit", "Car docs"
-                ],
-                "Clothing": [
-                    "Tops/Pants", "Jacket", "Underwear/Socks", "Pajamas", "Swimsuit", "Shoes/Sandals", "Laundry bag", "Hat"
-                ],
-                "Toiletries": [
-                    "Toothbrush/paste", "Deodorant", "Shampoo/Soap", "Glasses/Contacts", "Shaver", "Sunscreen"
-                ],
-                "Electronics": [
-                    "Laptop/Tablet & Chargers", "Camera", "Headphones"
-                ],
-                "Baby Gear": [
-                    "Diaper bag", "Diapers/Wipes", "Changing pad", "Portacot/Bassinet", "Car seat", "Stroller", "Carrier", "Bottles/Formula", "Food/Snacks", "Bibs", "Outfits", "Pajamas", "Blanket", "Toys/Books", "Meds", "Monitor", "Sound machine"
-                ],
-                "Pre-Departure": [
-                    "Toss old fruit/food", "Get neighbours to take care of pet", "Empty trash", "Water plants", "Hide valuables", "Lock windows/doors"
-                ]
+                "Essentials": ["Wallet", "Keys", "Phone & Charger", "Meds", "First-aid"],
+                "Clothing": ["Outfits", "Jacket", "Underwear/Socks", "Pajamas", "Swimsuit", "Shoes", "Hat"],
+                "Toiletries": ["Toothbrush/paste", "Deodorant", "Shampoo/Soap", "Glasses/Contacts", "Sunscreen"],
+                "Electronics": ["Laptop/Charger", "Camera", "Headphones"],
+                "Baby": ["Diaper bag", "Diapers/Wipes", "Portacot", "Stroller", "Bottles/Food", "Monitor", "Sound machine"]
             },
             overseas: {
-                "Pre-Departure Tasks": [
-                    "Toss old fruit/food", "Get neighbours to take care of pet", "Empty trash", "Hide valuables", "Water plants", "Check in online", "Download offline maps", "Hold mail (if needed)"
-                ],
-                "Documents & Money": [
-                    "Passports & Visas", "Flight tickets (Digital/Print)", "Hotel reservations", "Wallet (ID, cards)", "Cash / Local currency", "Buy mobile phone data package", "Intl Driving Permit", "Travel Insurance Policy", "Copies of important docs"
-                ],
-                "Electronics": [
-                    "Phone & Charger", "Laptop", "Power bank", "Universal Adapter", "Earphones / Headphones", "Kindle / E-reader", "Camera & spare battery", "Local SIM ejector tool"
-                ],
-                "Clothing": [
-                    "Shirts / Tops", "Pants / Shorts", "Jacket / Raincoat", "Underwear & Socks", "Pajamas", "Swimsuit", "Walking shoes", "Sandals", "Hat", "Laundry bag"
-                ],
-                "Toiletries": [
-                    "Toiletries bag", "Toothbrush/Paste/Floss", "Deodorant", "Shampoo/Conditioner/Soap", "Skincare", "Sunscreen", "Glasses / Contacts", "Electric Shaver", "Hand sanitizer", "First-aid kit (painkillers, plasters)", "Insect repellent", "Feminine hygiene"
-                ],
-                "Carry-On Essentials": [
-                    "Passports/Wallet/Phone", "Meds (Prescriptions)", "Change of clothes", "Gum", "Fruit / Snacks", "Books (1-2 for plane)", "Neck pillow", "Empty water bottle", "Pen", "Valuables"
-                ],
-                "Baby Gear": [
-                    "Baby Passport", "Car seat", "Travel Stroller", "Hip belt / Baby carrier (for Waitaks)", "Diaper bag", "Swim nappies", "Diapers & Wipes (plenty)", "Changing pad", "Breast pump", "Formula / Milk", "Baby feeding tools (plastic spoons/plate)", "Baby food/Snacks", "Bibs (Drool & Food)", "Bottles / Sippy cups", "Outfits (Layers)", "Pajamas", "Baby cot sheet", "Playmat / Quilted rug / Towel", "Books / Bedtime Book", "Whale mobile", "Meds (Paracetamol, Thermometer)", "Sun hat", "Baby sunscreen", "Baby monitor", "Sound machine"
-                ],
-                "Miscellaneous": [
-                    "Spare bags (rubbish/laundry)", "Luggage tags", "Travel lock", "Sunglasses", "Umbrella"
-                ]
+                "Pre-Departure": ["Empty trash", "Water plants", "Hide valuables", "Check in online", "Download maps", "Hold mail"],
+                "Docs & Money": ["Passports", "Visas", "Tickets (Offline)", "Hotel docs", "Wallet/Cards", "Cash", "Travel Insurance", "Intl Driving Permit"],
+                "Tech": ["Phone/Charger", "Power bank", "Universal Adapter", "Headphones", "Kindle", "SIM tool"],
+                "Clothing": ["Tops", "Pants/Shorts", "Jacket/Raincoat", "Underwear/Socks", "Pajamas", "Swimsuit", "Walking shoes", "Sandals", "Hat", "Laundry bag"],
+                "Toiletries": ["Toothbrush/Paste", "Deodorant", "Shampoo/Soap", "Skincare", "Sunscreen", "Glasses/Contacts", "Shaver", "First-aid/Meds", "Sanitizer"],
+                "Carry-On": ["Passports/Wallet", "Meds", "Change of clothes", "Snacks", "Water bottle (empty)", "Pen", "Valuables"],
+                "Baby Gear": ["Passport", "Car seat", "Stroller", "Carrier", "Diapers/Wipes", "Swim nappies", "Changing pad", "Formula/Milk", "Feeding tools", "Bibs", "Bottles", "Outfits", "Sleep sack", "Sound machine", "Monitor", "Meds"]
             }
         };
 
-        document.addEventListener('DOMContentLoaded', initialize);
+        // --- STATE MANAGEMENT ---
+        let currentType = 'overseas';
+        let state = {
+            overseas: { items: {}, custom: [] },
+            camping: { items: {}, custom: [] },
+            local: { items: {}, custom: [] }
+        };
 
-        function getStorageKey() {
-            const type = document.getElementById('checklist-type').value;
-            return `${type}_checklistState`;
-        }
-        
-        function getDefaultState() {
-            return {
-                items: {},
-                customItems: [],
-                filter: 'all'
-            };
-        }
-
-        function initialize() {
-            const savedType = localStorage.getItem('checklistType') || 'overseas';
-            document.getElementById('checklist-type').value = savedType;
-            
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            document.getElementById('filter-packed').value = state.filter;
-
-            populateChecklist();
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
             loadState();
-        }
-
-        function handleChecklistChange() {
-            const selectedType = document.getElementById('checklist-type').value;
-            localStorage.setItem('checklistType', selectedType);
-            initialize();
-        }
-        
-        function handleFilterChange() {
-            const filterValue = document.getElementById('filter-packed').value;
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            state.filter = filterValue;
-            localStorage.setItem(getStorageKey(), JSON.stringify(state));
-            applyFilter();
-        }
-
-        function createChecklistItem(item, id, isCustom = false) {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'checklist-item';
-            itemDiv.id = `item-${id}`;
-            if (isCustom) {
-                itemDiv.dataset.custom = true;
-            }
-
-            const itemName = document.createElement('span');
-            itemName.textContent = item;
-
-            const checkboxGroup = document.createElement('div');
-            checkboxGroup.className = 'checkbox-group';
-
-            const packedLabel = document.createElement('label');
-            const packedCheckbox = document.createElement('input');
-            packedCheckbox.type = 'checkbox';
-            packedCheckbox.id = `packed-${id}`;
-            packedCheckbox.onchange = () => saveAndRender();
-            packedLabel.appendChild(packedCheckbox);
-            packedLabel.appendChild(document.createTextNode('Packed'));
             
-            const morningLabel = document.createElement('label');
-            const morningCheckbox = document.createElement('input');
-            morningCheckbox.type = 'checkbox';
-            morningCheckbox.id = `morning-${id}`;
-            morningCheckbox.onchange = () => saveAndRender();
-            morningLabel.appendChild(morningCheckbox);
-            morningLabel.appendChild(document.createTextNode('Pack in AM'));
+            // Check if user has a preference saved
+            const savedType = localStorage.getItem('checklist_pref_type');
+            if(savedType) {
+                currentType = savedType;
+                document.getElementById('checklist-type').value = currentType;
+            }
+            
+            // Add Enter key listener for adding items
+            document.getElementById('custom-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    addCustomItem();
+                }
+            });
 
-            checkboxGroup.appendChild(packedLabel);
-            checkboxGroup.appendChild(morningLabel);
+            renderList();
+        });
 
-            itemDiv.appendChild(itemName);
-            itemDiv.appendChild(checkboxGroup);
-            return itemDiv;
+        function switchListType() {
+            currentType = document.getElementById('checklist-type').value;
+            localStorage.setItem('checklist_pref_type', currentType);
+            renderList();
         }
 
-        function populateChecklist() {
-            const type = document.getElementById('checklist-type').value;
-            const data = checklistData[type];
-            const container = document.getElementById('checklist-container');
+        // --- CORE RENDER LOGIC ---
+        function renderList() {
+            const container = document.getElementById('main-list-container');
+            const morningContainer = document.getElementById('morning-list');
+            const morningSection = document.getElementById('morning-section');
             container.innerHTML = '';
+            morningContainer.innerHTML = '';
 
-            // Render standard items
-            for (const category in data) {
+            const data = defaultData[currentType];
+            const currentState = state[currentType];
+            const filter = document.getElementById('filter-view').value;
+
+            let totalItems = 0;
+            let packedItems = 0;
+            let hasMorningItems = false;
+
+            // 1. Render Standard Categories
+            for (const [category, items] of Object.entries(data)) {
+                // Create Accordion Section
                 const section = document.createElement('div');
                 section.className = 'category-section';
+                // Restore collapsed state if desired, for now default open
                 
-                const title = document.createElement('h3');
-                title.textContent = category;
-                section.appendChild(title);
+                const header = document.createElement('h3');
+                header.className = 'category-header';
+                header.innerHTML = `${category} <svg class="arrow" width="12" height="12" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>`;
+                header.onclick = () => section.classList.toggle('collapsed');
+                
+                const listDiv = document.createElement('div');
+                listDiv.className = 'item-list';
 
-                data[category].forEach(item => {
-                    // Create a somewhat unique ID based on category and item text
-                    const safeKey = `${type}-${category}-${item}`.replace(/[^a-zA-Z0-9-]/g, '');
-                    section.appendChild(createChecklistItem(item, safeKey));
+                let visibleCount = 0;
+
+                items.forEach(itemText => {
+                    const id = sanitizeId(category + itemText);
+                    const itemData = currentState.items[id] || { packed: false, am: false };
+                    
+                    // Stats
+                    totalItems++;
+                    if (itemData.packed) packedItems++;
+
+                    // Render Logic
+                    const isVisible = !(filter === 'unpacked' && itemData.packed);
+                    if (isVisible) visibleCount++;
+
+                    // Morning Logic
+                    if (itemData.am) {
+                        hasMorningItems = true;
+                        if(filter !== 'unpacked' || !itemData.packed) {
+                            morningContainer.appendChild(createItemEl(itemText, id, itemData, true));
+                        }
+                    }
+
+                    if (isVisible) {
+                        listDiv.appendChild(createItemEl(itemText, id, itemData, false));
+                    }
                 });
-                container.appendChild(section);
+
+                if (visibleCount > 0) {
+                    section.appendChild(header);
+                    section.appendChild(listDiv);
+                    container.appendChild(section);
+                }
             }
 
-            // Render custom items
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            if (state.customItems.length > 0) {
-                let customSection = document.getElementById('custom-items-section');
-                if (!customSection) {
-                    customSection = document.createElement('div');
-                    customSection.className = 'category-section';
-                    customSection.id = 'custom-items-section';
-                    const title = document.createElement('h3');
-                    title.textContent = "Custom Items";
-                    customSection.appendChild(title);
+            // 2. Render Custom Items
+            if (currentState.custom.length > 0) {
+                const customSection = document.createElement('div');
+                customSection.className = 'category-section';
+                customSection.innerHTML = `<h3 class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">Custom Items <svg class="arrow" width="12" height="12" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg></h3>`;
+                const listDiv = document.createElement('div');
+                listDiv.className = 'item-list';
+                
+                let visibleCustom = 0;
+                currentState.custom.forEach((item, index) => {
+                    totalItems++;
+                    if (item.packed) packedItems++;
+
+                    const isVisible = !(filter === 'unpacked' && item.packed);
+                    if (isVisible) visibleCustom++;
+
+                    if (item.am) {
+                        hasMorningItems = true;
+                        if(filter !== 'unpacked' || !item.packed) {
+                            morningContainer.appendChild(createCustomItemEl(item, index, true));
+                        }
+                    }
+
+                    if (isVisible) {
+                        listDiv.appendChild(createCustomItemEl(item, index, false));
+                    }
+                });
+
+                if (visibleCustom > 0) {
+                    customSection.appendChild(listDiv);
                     container.appendChild(customSection);
                 }
-                // Clear existing custom items to prevent duplicates on re-render
-                customSection.querySelectorAll('[data-custom="true"]').forEach(el => el.remove());
-
-                state.customItems.forEach((item, index) => {
-                    const id = `custom-${index}`;
-                    customSection.appendChild(createChecklistItem(item.name, id, true));
-                });
             }
-        }
-        
-        function addCustomItem() {
-            const input = document.getElementById('custom-item-input');
-            const itemName = input.value.trim();
-            if (!itemName) return;
 
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            state.customItems.push({ name: itemName, packed: false, morning: false, morningPacked: false });
-            localStorage.setItem(getStorageKey(), JSON.stringify(state));
-
-            input.value = '';
-            populateChecklist();
-            loadState();
-        }
-
-        function saveAndRender() {
+            // 3. UI Updates
+            morningSection.classList.toggle('hidden', !hasMorningItems);
+            updateProgress(packedItems, totalItems);
             saveState();
-            renderUIState();
         }
 
-        function renderUIState() {
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            const morningListContainer = document.getElementById('morning-list');
-            morningListContainer.innerHTML = '';
-            let hasMorningItems = false;
+        function createItemEl(text, id, data, isMorningView) {
+            const div = document.createElement('div');
+            div.className = 'checklist-item';
             
-            // Update main list items and populate morning list
-            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
-                const id = itemDiv.id.replace('item-', '');
-                const packedCheckbox = document.getElementById(`packed-${id}`);
-                const morningCheckbox = document.getElementById(`morning-${id}`);
-                const itemNameSpan = itemDiv.querySelector('span');
+            const checkboxId = isMorningView ? `am-check-${id}` : `check-${id}`;
+            
+            div.innerHTML = `
+                <label class="item-label" for="${checkboxId}">
+                    <input type="checkbox" id="${checkboxId}" ${data.packed ? 'checked' : ''}>
+                    <span class="item-text ${data.packed ? 'completed' : ''}">${text}</span>
+                </label>
+                <div class="item-actions">
+                    ${!isMorningView ? `
+                    <label class="am-toggle">
+                        <input type="checkbox" ${data.am ? 'checked' : ''} onchange="toggleAM('${id}')">
+                        Pack AM
+                    </label>` : ''}
+                </div>
+            `;
 
-                // Apply 'completed' class to main list items
-                if (packedCheckbox && packedCheckbox.checked) {
-                    itemNameSpan.classList.add('completed');
-                } else {
-                    itemNameSpan.classList.remove('completed');
-                }
-
-                // Populate morning list
-                if (morningCheckbox && morningCheckbox.checked) {
-                    hasMorningItems = true;
-                    const morningItemDiv = document.createElement('div');
-                    morningItemDiv.className = 'morning-item';
-                    morningItemDiv.id = `morning-item-${id}`; 
-
-                    const packedMorningCheckbox = document.createElement('input');
-                    packedMorningCheckbox.type = 'checkbox';
-                    packedMorningCheckbox.id = `morning-packed-${id}`;
-                    packedMorningCheckbox.className = 'checkbox-packed';
-                    
-                    // Get the state for this specific item
-                    let itemState;
-                    if (itemDiv.dataset.custom) {
-                        const customIndex = parseInt(id.replace('custom-', ''));
-                        itemState = state.customItems[customIndex];
-                    } else {
-                        itemState = state.items[id];
-                    }
-
-                    packedMorningCheckbox.checked = itemState?.morningPacked || false;
-
-                    packedMorningCheckbox.onchange = () => {
-                        const mainPackedCheckbox = document.getElementById(`packed-${id}`);
-                        if (mainPackedCheckbox) {
-                           mainPackedCheckbox.checked = packedMorningCheckbox.checked;
-                        }
-                        saveAndRender();
-                    };
-                    
-                    const morningItemName = document.createElement('span');
-                    morningItemName.textContent = itemNameSpan.textContent;
-                    if (packedMorningCheckbox.checked) {
-                        morningItemName.classList.add('completed');
-                    }
-
-                    morningItemDiv.appendChild(packedMorningCheckbox);
-                    morningItemDiv.appendChild(morningItemName);
-                    morningListContainer.appendChild(morningItemDiv);
-                }
-            });
-
-            document.getElementById('morning-pack-container').style.display = hasMorningItems ? 'block' : 'none';
-            applyFilter(); 
-        }
-
-        function saveState() {
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            state.items = {}; // Reset standard items
-            state.customItems = []; // Reset custom items to rebuild from current UI
-
-            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
-                const id = itemDiv.id.replace('item-', '');
-                const packedCheckbox = document.getElementById(`packed-${id}`);
-                const morningCheckbox = document.getElementById(`morning-${id}`);
-                const morningPackedCheckbox = document.getElementById(`morning-packed-${id}`);
-                
-                const itemData = {
-                    packed: packedCheckbox ? packedCheckbox.checked : false,
-                    morning: morningCheckbox ? morningCheckbox.checked : false,
-                    morningPacked: morningPackedCheckbox ? morningPackedCheckbox.checked : false
+            // Checkbox handler
+            div.querySelector(`input[type="checkbox"]`).onchange = (e) => {
+                state[currentType].items[id] = { 
+                    ...data, 
+                    packed: e.target.checked 
                 };
+                renderList();
+            };
 
-                if (itemDiv.dataset.custom) {
-                    itemData.name = itemDiv.querySelector('span').textContent;
-                    state.customItems.push(itemData);
-                } else {
-                    state.items[id] = itemData;
-                }
-            });
-
-            localStorage.setItem(getStorageKey(), JSON.stringify(state));
+            return div;
         }
 
-        function loadState() {
-            const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
+        function createCustomItemEl(item, index, isMorningView) {
+            const div = document.createElement('div');
+            div.className = 'checklist-item';
+            
+            div.innerHTML = `
+                <label class="item-label">
+                    <input type="checkbox" ${item.packed ? 'checked' : ''}>
+                    <span class="item-text ${item.packed ? 'completed' : ''}">${item.text}</span>
+                </label>
+                <div class="item-actions">
+                    ${!isMorningView ? `
+                    <label class="am-toggle">
+                        <input type="checkbox" ${item.am ? 'checked' : ''}>
+                        Pack AM
+                    </label>
+                    <button class="delete-btn" aria-label="Delete item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>` : ''}
+                </div>
+            `;
 
-            // Load standard item states
-            for (const id in state.items) {
-                const packedCheckbox = document.getElementById(`packed-${id}`);
-                const morningCheckbox = document.getElementById(`morning-${id}`);
-                if (packedCheckbox && morningCheckbox) {
-                    packedCheckbox.checked = state.items[id].packed;
-                    morningCheckbox.checked = state.items[id].morning;
+            div.querySelector(`input[type="checkbox"]`).onchange = (e) => {
+                state[currentType].custom[index].packed = e.target.checked;
+                renderList();
+            };
+
+            // Attach event listeners via JS instead of HTML string to ensure reliability
+            if (!isMorningView) {
+                // AM Toggle
+                const amCheckbox = div.querySelector('.am-toggle input');
+                if (amCheckbox) {
+                    amCheckbox.onchange = () => toggleCustomAM(index);
+                }
+
+                // Delete Button
+                const delBtn = div.querySelector('.delete-btn');
+                if (delBtn) {
+                    delBtn.onclick = () => deleteCustomItem(index);
                 }
             }
 
-            // Load custom item states
-            state.customItems.forEach((item, index) => {
-                const id = `custom-${index}`;
-                const packedCheckbox = document.getElementById(`packed-${id}`);
-                const morningCheckbox = document.getElementById(`morning-${id}`);
-                if (packedCheckbox && morningCheckbox) {
-                    packedCheckbox.checked = item.packed;
-                    morningCheckbox.checked = item.morning;
-                }
-            });
-
-            renderUIState();
+            return div;
         }
 
-        function applyFilter() {
-            const filter = document.getElementById('filter-packed').value;
-            
-            // Filter main checklist items
-            document.querySelectorAll('.checklist-item').forEach(itemDiv => {
-                const id = itemDiv.id.replace('item-', '');
-                const packedCheckbox = document.getElementById(`packed-${id}`);
-                if (filter === 'unpacked' && packedCheckbox && packedCheckbox.checked) {
-                    itemDiv.classList.add('hidden-packed');
-                } else {
-                    itemDiv.classList.remove('hidden-packed');
-                }
-            });
+        // --- ACTIONS ---
 
-            // Filter 'Pack in AM' items
-            document.querySelectorAll('.morning-item').forEach(morningItemDiv => {
-                const id = morningItemDiv.id.replace('morning-item-', '');
-                const packedMorningCheckbox = document.getElementById(`morning-packed-${id}`);
-                if (filter === 'unpacked' && packedMorningCheckbox && packedMorningCheckbox.checked) {
-                    morningItemDiv.classList.add('hidden-packed');
-                } else {
-                    morningItemDiv.classList.remove('hidden-packed');
-                }
-            });
+        function addCustomItem() {
+            const input = document.getElementById('custom-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            state[currentType].custom.push({ text: val, packed: false, am: false });
+            input.value = '';
+            renderList();
+        }
+
+        function deleteCustomItem(index) {
+            if(confirm('Remove this custom item?')) {
+                state[currentType].custom.splice(index, 1);
+                renderList();
+            }
+        }
+
+        function toggleAM(id) {
+            const current = state[currentType].items[id] || { packed: false, am: false };
+            state[currentType].items[id] = { ...current, am: !current.am };
+            renderList();
+        }
+
+        function toggleCustomAM(index) {
+            state[currentType].custom[index].am = !state[currentType].custom[index].am;
+            renderList();
+        }
+
+        function updateProgress(packed, total) {
+            const percentage = total === 0 ? 0 : Math.round((packed / total) * 100);
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-text').textContent = `Packed: ${percentage}%`;
+            document.getElementById('items-count').textContent = `${packed}/${total}`;
+
+            if (percentage === 100 && total > 0) {
+                fireConfetti();
+            }
         }
 
         function toggleSettings() {
-            const content = document.getElementById('settings-content');
-            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('settings-content').classList.toggle('open');
         }
 
-        function resetChecklist() {
-            if(confirm("Are you sure you want to reset all checks and custom items for this list?")) {
-                localStorage.removeItem(getStorageKey());
-                initialize();
+        function resetList() {
+            if (confirm("Reset current checks? (Custom items will remain)")) {
+                // Clear packed status but keep custom items and AM settings
+                Object.keys(state[currentType].items).forEach(key => {
+                    state[currentType].items[key].packed = false;
+                });
+                state[currentType].custom.forEach(item => item.packed = false);
+                renderList();
+                document.getElementById('settings-content').classList.remove('open');
             }
+        }
+
+        // --- EXPORT / IMPORT ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "packing_list_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function triggerImport() {
+            document.getElementById('import-file').click();
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedState = JSON.parse(e.target.result);
+                    // Basic validation
+                    if(loadedState.overseas && loadedState.camping) {
+                        state = loadedState;
+                        saveState();
+                        renderList();
+                        alert("List imported successfully!");
+                    } else {
+                        throw new Error("Invalid file format");
+                    }
+                } catch(err) {
+                    alert("Error loading file. Make sure it's a valid JSON backup.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- UTILS ---
+        function sanitizeId(str) {
+            return str.replace(/[^a-zA-Z0-9]/g, '');
+        }
+
+        function saveState() {
+            localStorage.setItem('checklist_state_v2', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('checklist_state_v2');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+
+        // --- CONFETTI (Simple Canvas implementation) ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const pieces = [];
+            const colors = ['#f0ad4e', '#7b8ff3', '#5cb85c', '#c9302c', '#ffffff'];
+            
+            for(let i=0; i<100; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2,
+                    angle: Math.random() * 6.2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.angle += 0.1;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                    if(p.y < canvas.height) active = true;
+                });
+                
+                if(active) requestAnimationFrame(animate);
+                else ctx.clearRect(0,0, canvas.width, canvas.height);
+            }
+            animate();
         }
     </script>
 </body>
