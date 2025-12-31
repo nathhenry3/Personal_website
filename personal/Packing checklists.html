@@ -28,11 +28,12 @@
         }
         .instructions {
             margin-bottom: 25px;
-            list-style-type: disc; /* Ensure bullet points for the list */
-            padding-left: 20px; /* Add padding for list items */
+            list-style-type: disc;
+            padding-left: 20px;
+            color: #bbb;
         }
         .instructions li {
-            margin-bottom: 8px; /* Spacing between list items */
+            margin-bottom: 8px;
         }
         .controls-container {
             display: flex;
@@ -84,7 +85,7 @@
             grid-template-columns: 1fr auto;
             align-items: center;
             gap: 15px;
-            padding: 8px 5px;
+            padding: 10px 5px;
             border-bottom: 1px solid #444;
         }
         .morning-item {
@@ -116,10 +117,14 @@
         .checkbox-group label {
             font-weight: normal;
             color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
         }
         .completed {
             text-decoration: line-through;
-            color: #888;
+            color: #777;
         }
         .hidden-packed {
             display: none !important;
@@ -137,7 +142,7 @@
             margin-top: 0;
         }
         .add-item-section input[type="text"] {
-            width: calc(100% - 110px);
+            width: calc(100% - 130px);
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #7b8ff3;
@@ -154,6 +159,7 @@
             font-size: 1em;
             font-weight: bold;
             color: white;
+            transition: background-color 0.2s;
         }
         .add-button {
             background-color: #5cb85c;
@@ -181,7 +187,26 @@
             display: none;
             margin-top: 15px;
         }
-
+        
+        /* Mobile optimization */
+        @media (max-width: 600px) {
+            .checklist-item {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            .checklist-item .checkbox-group {
+                grid-column: 1;
+                justify-content: space-between;
+                margin-top: 5px;
+            }
+            .add-item-section input[type="text"] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .add-button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -190,10 +215,9 @@
         <h1>Nathan & Michelle's Travel Checklist</h1>
 
         <ul class="instructions">
-            <li>Select your destination type from the dropdown to generate a packing list.</li>
-            <li>Check off items as you pack them.</li>
-            <li>Use the "Pack in AM" checkbox for things you need to use on the morning of departure; these will appear in a separate list at the top for final checking.</li>
-            <li>You can also add manual items at the bottom of the list.</li>
+            <li>Select your destination type (e.g., Overseas) to generate a packing list.</li>
+            <li>Use the "Pack in AM" checkbox for items used on departure morning (e.g., toiletries, fruit); they appear in the top yellow box.</li>
+            <li>Add custom items at the bottom if needed.</li>
         </ul>
 
         <div class="controls-container">
@@ -223,8 +247,10 @@
         
         <div class="add-item-section">
             <h3>Add Custom Item</h3>
-            <input type="text" id="custom-item-input" placeholder="e.g., Yoga ball">
-            <button class="button add-button" onclick="addCustomItem()">Add Item</button>
+            <div style="display: flex; flex-wrap: wrap;">
+                <input type="text" id="custom-item-input" placeholder="e.g., Yoga ball">
+                <button class="button add-button" onclick="addCustomItem()">Add Item</button>
+            </div>
         </div>
 
         <div class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</div>
@@ -237,71 +263,71 @@
         const checklistData = {
             camping: {
                 "Shelter & Sleeping": [
-                    "Tent, poles, stakes", "Tent footprint/groundsheet", "Tarp", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress", "Tent repair kit", "Extra guy lines/rope", "Mallet/hammer"
+                    "Tent, poles, stakes", "Tent footprint/groundsheet", "Tarp", "Sleeping bags", "Sleeping pads / Air mattress", "Pillows", "Pump for air mattress", "Tent repair kit", "Mallet/hammer"
                 ],
                 "Cooking & Kitchen": [
-                    "Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs, ladle)", "Plates and bowls", "Cutlery", "Mugs / Cups", "Cooler / Esky", "Ice packs/gel packs", "Water bottles", "Water filter / purification system", "Dish soap (biodegradable)", "Sponge / Scrubber", "Trash bags", "Paper towels", "Ziploc bags", "Can opener", "Bottle opener", "Coffee/tea maker (e.g., AeroPress, French press)", "Cutting board", "Camp knife set", "Cooking oil", "Basic spices (salt, pepper)", "Coffee filters", "Thermos", "Camp sink/basin", "Drying rack/line", "Fire extinguisher (small)", "Grill grate", "Dutch oven"
+                    "Stove and fuel", "Pots and pans", "Cooking utensils (spatula, tongs)", "Plates, bowls, cutlery", "Mugs", "Cooler / Esky", "Ice/Gel packs", "Water bottles", "Water purification", "Dish soap (biodegradable) & sponge", "Trash bags", "Paper towels", "Ziploc bags", "Can/Bottle opener", "Coffee/tea maker", "Cutting board", "Knife set", "Oil & Spices", "Thermos", "Fire extinguisher"
                 ],
                 "Clothing": [
-                    "Moisture-wicking base layers", "Hiking shirts", "Fleece or insulated jacket", "Waterproof rain jacket", "Waterproof pants", "Hiking pants / Shorts", "Underwear and socks (wool/synthetic, multiple pairs)", "Thermal underwear", "Pajamas", "Hat (for sun and warmth)", "Gloves / Mittens", "Waterproof gloves", "Gaiters", "Camp shoes (sandals/crocs)", "Hiking boots", "Spare shoes/sandals", "Laundry bag"
+                    "Base layers", "Fleece/Insulated jacket", "Rain jacket & pants", "Hiking pants/shorts", "Underwear & Socks (wool/synthetic)", "Thermals", "Pajamas", "Warm Hat & Gloves", "Camp shoes (sandals)", "Hiking boots", "Laundry bag"
                 ],
                 "Safety & First Aid": [
-                    "First-aid kit (band-aids, antiseptic, pain relief, blister care, gauze, tape)", "Emergency whistle", "Multi-tool or knife", "Headlamps / Flashlights (with extra batteries)", "Power bank", "Map and compass / GPS device", "Emergency communication (e.g., PLB, satellite phone, walkie-talkies)", "Bear spray (if applicable)", "Water purification tablets", "Emergency blanket", "Duct tape", "Rope/cordage (utility)", "Fire starting kit (lighter, waterproof matches, fire steel, tinder)", "Bear canister/bag (if applicable)", "Heavy-duty insect repellent", "Snake bite kit"
+                    "First-aid kit (blister care, antiseptic)", "Headlamps/Flashlights (extra batteries)", "Power bank", "Map/Compass/GPS", "Multi-tool/Knife", "Lighter/Matches/Fire starter", "Insect repellent", "Sunscreen"
                 ],
-                "Health & Hygiene": [
-                    "Toiletries (toothbrush, toothpaste, dental floss)", "Quick-dry towel", "Sunscreen", "Insect repellent", "Hand sanitizer", "Toilet paper", "Camp shovel / trowel", "Biodegradable soap", "Personal medications (with prescription copies)", "Pain relievers (ibuprofen, paracetamol)", "Anti-diarrhea medication", "Allergy medication", "Blister treatment/Moleskin", "Hand warmers", "Small mirror", "Comb/brush", "Feminine hygiene products"
-                ],
-                "Miscellaneous": [
-                    "Backpacks (daypack & main pack)", "Camp chairs", "Camp table", "Rope / Cordage", "Duct tape", "Fire starters (lighter, matches)", "Axe / Saw", "Book / Entertainment (cards, board games)", "Camera and accessories (extra battery, memory card)", "Camp shower", "Portable toilet", "Solar charger", "Binoculars", "Field guides (plants, birds)", "Journal / Pen", "Fishing gear", "Repair kits (tent, stove, general)", "Small broom/dustpan", "Camp rug/mat", "Camp lighting (lanterns, string lights)", "Bungee cords", "Zip ties", "Dry bags/stuff sacks"
+                "Hygiene": [
+                    "Toiletries (Toothbrush/paste)", "Quick-dry towel", "Hand sanitizer", "Toilet paper", "Trowel (for digging cat holes)", "Biodegradable soap", "Meds"
                 ],
                 "Baby Gear": [
-                    "Portable crib / Pack-n-play", "Baby sleeping bag / Wearable blanket", "Baby carrier (for hiking)", "Outdoor blanket", "Sun hat for baby", "Baby-safe sunscreen", "Diapers and wipes (plenty)", "Changing pad", "Diaper disposal bags", "Bottles and formula/milk", "Baby food and snacks", "Sippy cup", "Portable high chair", "Baby first-aid items (diaper cream, thermometer, nasal aspirator)", "Favorite toys/books", "Baby soap/shampoo", "Baby monitor", "Portable sound machine", "Baby-safe cleaning wipes", "Bibs", "Burp cloths"
+                    "Portable crib / Pack-n-play", "Baby sleeping bag", "Baby carrier (hiking)", "Outdoor blanket/Play mat", "Sun hat", "Baby sunscreen", "Diapers & Wipes", "Changing pad", "Diaper bags", "Bottles/Formula/Food", "Sippy cup", "High chair", "Meds (Thermometer, Panadol)", "Toys/Books", "Bibs"
+                ],
+                "Miscellaneous": [
+                    "Camp chairs", "Table", "Duct tape", "Games/Books", "Camera", "Binoculars"
                 ]
             },
             local: {
                 "Essentials": [
-                    "Wallet (ID, credit cards, loyalty cards)", "Keys (house, car, spare car key)", "Phone and charger", "Portable power bank", "Medications (personal, with original labels)", "Small first-aid kit", "Copies of IDs/important documents (digital & physical)", "Emergency contacts list", "Travel insurance information", "Car documents (registration, insurance)", "Small amount of cash"
+                    "Wallet (ID, cards)", "Keys", "Phone & Charger", "Power bank", "Meds", "First-aid kit", "Car docs"
                 ],
                 "Clothing": [
-                    "T-shirts / Tops", "Pants / Jeans / Shorts", "Sweater / Jacket", "Underwear and socks (multiple pairs)", "Pajamas", "Swimsuit (if applicable)", "Dressier outfit (if needed)", "Shoes / Sandals", "Specific outfits for events", "Activewear", "Rain gear", "Formal wear (if required)", "Laundry bag"
+                    "Tops/Pants", "Jacket", "Underwear/Socks", "Pajamas", "Swimsuit", "Shoes/Sandals", "Laundry bag", "Hat"
                 ],
                 "Toiletries": [
-                    "Toothbrush and toothpaste", "Deodorant", "Shampoo and conditioner", "Soap / Body wash", "Hairbrush / Comb", "Skincare products", "Sunscreen", "Contact lenses / Glasses and solution", "Razor and shaving cream", "Makeup", "Hair styling products", "Nail clippers", "Tweezers", "Dental floss"
+                    "Toothbrush/paste", "Deodorant", "Shampoo/Soap", "Glasses/Contacts", "Shaver", "Sunscreen"
                 ],
                 "Electronics": [
-                    "Laptop / Tablet and all chargers", "Camera and accessories (extra battery, memory card)", "Portable speaker", "Headphones", "Car charger", "E-reader"
-                ],
-                "Hiking Gear": [
-                    "Daypack", "Hiking boots / shoes", "Water bottle", "Snacks", "Rain jacket", "Sun hat", "Map or trail app on phone", "Trekking poles (if needed)"
-                ],
-                "Miscellaneous": [
-                    "Book / E-reader", "Headphones", "Sunglasses", "Reusable water bottle", "Snacks for the road", "Reusable shopping bag", "Small umbrella", "Travel games", "Journal", "Pen", "Small gifts (if visiting friends/family)", "Neck pillow (for long drives)"
+                    "Laptop/Tablet & Chargers", "Camera", "Headphones"
                 ],
                 "Baby Gear": [
-                    "Diaper bag", "Diapers and wipes (plenty)", "Changing pad", "Portable crib / Bassinet", "Car seat", "Stroller", "Baby carrier", "Bottles and formula/milk (pre-portioned)", "Baby food and snacks", "Sippy cup", "Multiple outfits", "Pajamas", "Sun hat", "Blanket", "Favorite toys/soothers", "Diaper cream", "Baby soap/shampoo", "Baby monitor", "Baby-safe cleaning wipes", "Bibs", "Burp cloths", "Baby specific medications", "Thermometer", "Nasal aspirator"
+                    "Diaper bag", "Diapers/Wipes", "Changing pad", "Portacot/Bassinet", "Car seat", "Stroller", "Carrier", "Bottles/Formula", "Food/Snacks", "Bibs", "Outfits", "Pajamas", "Blanket", "Toys/Books", "Meds", "Monitor", "Sound machine"
+                ],
+                "Pre-Departure": [
+                    "Toss old fruit/food", "Get neighbours to take care of pet", "Empty trash", "Water plants", "Hide valuables", "Lock windows/doors"
                 ]
             },
             overseas: {
+                "Pre-Departure Tasks": [
+                    "Toss old fruit/food", "Get neighbours to take care of pet", "Empty trash", "Hide valuables", "Water plants", "Check in online", "Download offline maps", "Hold mail (if needed)"
+                ],
                 "Documents & Money": [
-                    "Passport and visas", "Flight tickets / Boarding passes (digital/print)", "Hotel reservations", "Copy of passport & important docs (digital/physical)", "Wallet (cash, credit cards, multiple from different banks)", "Local currency", "International driving permit (if applicable)", "Vaccination records", "Emergency contact list (physical copy)", "Small bills for tips", "Money belt/hidden wallet"
+                    "Passports & Visas", "Flight tickets (Digital/Print)", "Hotel reservations", "Wallet (ID, cards)", "Cash / Local currency", "Buy mobile phone data package", "Intl Driving Permit", "Travel Insurance Policy", "Copies of important docs"
                 ],
                 "Electronics": [
-                    "Phone and charger", "Portable power bank", "Universal travel adapter / Converter", "Headphones (noise-cancelling recommended)", "Laptop / Tablet and charger", "E-reader", "Unlocked phone", "Local SIM card/eSIM details", "Portable Wi-Fi hotspot", "Camera gear (lenses, tripod, extra batteries)", "External hard drive/cloud storage device"
+                    "Phone & Charger", "Laptop", "Power bank", "Universal Adapter", "Earphones / Headphones", "Kindle / E-reader", "Camera & spare battery", "Local SIM ejector tool"
                 ],
                 "Clothing": [
-                    "Shirts / Tops (mix of casual and smart)", "Pants / Trousers", "Jacket / Coat (weather appropriate, packable)", "Underwear and socks (plenty, quick-dry)", "Pajamas", "Swimsuit", "Formal / Smart casual outfit (if needed)", "Comfortable walking shoes", "Sandals / Flip-flops", "Dress shoes", "Layering options", "Quick-dry fabrics", "Specific attire for cultural/religious sites", "Laundry bag"
+                    "Shirts / Tops", "Pants / Shorts", "Jacket / Raincoat", "Underwear & Socks", "Pajamas", "Swimsuit", "Walking shoes", "Sandals", "Hat", "Laundry bag"
                 ],
                 "Toiletries": [
-                    "Toothbrush, toothpaste, floss", "Deodorant", "Shampoo, conditioner, soap (travel size)", "Skincare routine items", "Sunscreen (high SPF)", "Lip balm", "Hand sanitizer", "Basic first-aid kit (painkillers, band-aids, motion sickness pills, antiseptic wipes, blister treatment)", "Prescription medications (in original bottles, with doctor's note)", "Contact lenses / Glasses and solution", "Wet wipes", "Insect repellent (tropical strength if needed)", "Feminine hygiene products", "Small mirror", "Nail kit (clippers, file)", "Comb/brush"
+                    "Toiletries bag", "Toothbrush/Paste/Floss", "Deodorant", "Shampoo/Conditioner/Soap", "Skincare", "Sunscreen", "Glasses / Contacts", "Electric Shaver", "Hand sanitizer", "First-aid kit (painkillers, plasters)", "Insect repellent", "Feminine hygiene"
                 ],
                 "Carry-On Essentials": [
-                    "Passport & documents", "Phone, wallet, keys", "Medications (essential)", "Change of clothes (1-2 outfits)", "Basic toiletries (TSA-compliant)", "Power bank and cables", "Snacks", "Empty water bottle (to fill post-security)", "Book / Entertainment (e-reader, tablet)", "Neck pillow", "Eye mask and earplugs", "Pen (for customs forms)", "Valuables (jewelry, expensive electronics)", "Travel lock (TSA approved)"
-                ],
-                "Miscellaneous": [
-                    "Daypack / Small bag", "Travel lock (TSA approved)", "Luggage tags", "Sunglasses", "Sleep mask and earplugs", "Travel pillow", "Reusable water bottle", "Reusable shopping bag", "Travel journal", "Pen", "Gifts for hosts", "Language phrasebook/app", "Small sewing kit", "Universal sink stopper", "Travel clothesline", "Small umbrella", "Dry bags/stuff sacks"
+                    "Passports/Wallet/Phone", "Meds (Prescriptions)", "Change of clothes", "Gum", "Fruit / Snacks", "Books (1-2 for plane)", "Neck pillow", "Empty water bottle", "Pen", "Valuables"
                 ],
                 "Baby Gear": [
-                    "Passport for baby", "Car seat (check airline policy and destination regulations)", "Travel stroller (lightweight, compact)", "Baby carrier", "Diaper bag (as carry-on)", "Plenty of diapers and wipes for flight + 2-3 days", "Changing pad", "Formula / Breast milk (check airline rules for liquids)", "Baby food and snacks (pouches, crackers)", "Bottles / Sippy cups", "Multiple outfits (for different climates/spills)", "Pajamas", "Blankets", "Favorite toys / Pacifiers", "Baby-safe medications (e.g., pain relief, fever reducer)", "Thermometer", "Nasal aspirator", "Sling / Carrier", "Sun hat for baby", "Baby sunscreen", "Travel-sized baby toiletries (shampoo, body wash)", "Baby monitor", "Portable sound machine"
+                    "Baby Passport", "Car seat", "Travel Stroller", "Hip belt / Baby carrier (for Waitaks)", "Diaper bag", "Swim nappies", "Diapers & Wipes (plenty)", "Changing pad", "Breast pump", "Formula / Milk", "Baby feeding tools (plastic spoons/plate)", "Baby food/Snacks", "Bibs (Drool & Food)", "Bottles / Sippy cups", "Outfits (Layers)", "Pajamas", "Baby cot sheet", "Playmat / Quilted rug / Towel", "Books / Bedtime Book", "Whale mobile", "Meds (Paracetamol, Thermometer)", "Sun hat", "Baby sunscreen", "Baby monitor", "Sound machine"
+                ],
+                "Miscellaneous": [
+                    "Spare bags (rubbish/laundry)", "Luggage tags", "Travel lock", "Sunglasses", "Umbrella"
                 ]
             }
         };
@@ -322,7 +348,7 @@
         }
 
         function initialize() {
-            const savedType = localStorage.getItem('checklistType') || 'camping';
+            const savedType = localStorage.getItem('checklistType') || 'overseas';
             document.getElementById('checklist-type').value = savedType;
             
             const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
@@ -361,20 +387,20 @@
             checkboxGroup.className = 'checkbox-group';
 
             const packedLabel = document.createElement('label');
-            packedLabel.textContent = 'Packed';
             const packedCheckbox = document.createElement('input');
             packedCheckbox.type = 'checkbox';
             packedCheckbox.id = `packed-${id}`;
             packedCheckbox.onchange = () => saveAndRender();
-            packedLabel.prepend(packedCheckbox);
+            packedLabel.appendChild(packedCheckbox);
+            packedLabel.appendChild(document.createTextNode('Packed'));
             
             const morningLabel = document.createElement('label');
-            morningLabel.textContent = 'Pack in AM';
             const morningCheckbox = document.createElement('input');
             morningCheckbox.type = 'checkbox';
             morningCheckbox.id = `morning-${id}`;
             morningCheckbox.onchange = () => saveAndRender();
-            morningLabel.prepend(morningCheckbox);
+            morningLabel.appendChild(morningCheckbox);
+            morningLabel.appendChild(document.createTextNode('Pack in AM'));
 
             checkboxGroup.appendChild(packedLabel);
             checkboxGroup.appendChild(morningLabel);
@@ -400,8 +426,9 @@
                 section.appendChild(title);
 
                 data[category].forEach(item => {
-                    const id = `${type}-${category}-${item}`.replace(/[^a-zA-Z0-9-]/g, '');
-                    section.appendChild(createChecklistItem(item, id));
+                    // Create a somewhat unique ID based on category and item text
+                    const safeKey = `${type}-${category}-${item}`.replace(/[^a-zA-Z0-9-]/g, '');
+                    section.appendChild(createChecklistItem(item, safeKey));
                 });
                 container.appendChild(section);
             }
@@ -435,7 +462,7 @@
             if (!itemName) return;
 
             const state = JSON.parse(localStorage.getItem(getStorageKey())) || getDefaultState();
-            state.customItems.push({ name: itemName, packed: false, morning: false, morningPacked: false }); // Initialize new custom item state
+            state.customItems.push({ name: itemName, packed: false, morning: false, morningPacked: false });
             localStorage.setItem(getStorageKey(), JSON.stringify(state));
 
             input.value = '';
@@ -473,14 +500,14 @@
                     hasMorningItems = true;
                     const morningItemDiv = document.createElement('div');
                     morningItemDiv.className = 'morning-item';
-                    morningItemDiv.id = `morning-item-${id}`; // Add ID for filtering
+                    morningItemDiv.id = `morning-item-${id}`; 
 
                     const packedMorningCheckbox = document.createElement('input');
                     packedMorningCheckbox.type = 'checkbox';
                     packedMorningCheckbox.id = `morning-packed-${id}`;
                     packedMorningCheckbox.className = 'checkbox-packed';
                     
-                    // Get the state for this specific item (standard or custom)
+                    // Get the state for this specific item
                     let itemState;
                     if (itemDiv.dataset.custom) {
                         const customIndex = parseInt(id.replace('custom-', ''));
@@ -512,7 +539,7 @@
             });
 
             document.getElementById('morning-pack-container').style.display = hasMorningItems ? 'block' : 'none';
-            applyFilter(); // Apply filter after rendering all items, including morning ones
+            applyFilter(); 
         }
 
         function saveState() {
@@ -556,11 +583,7 @@
                 }
             }
 
-            // Load custom item states and ensure they are added to the DOM before trying to set their states
-            // This part needs to be careful because populateChecklist might re-render custom items
-            // For custom items, we need to ensure they exist in the DOM before trying to load their state.
-            // The `populateChecklist` function already handles adding custom items from `state.customItems`
-            // so we just need to ensure their checkboxes are correctly set after they are created.
+            // Load custom item states
             state.customItems.forEach((item, index) => {
                 const id = `custom-${index}`;
                 const packedCheckbox = document.getElementById(`packed-${id}`);
@@ -571,7 +594,7 @@
                 }
             });
 
-            renderUIState(); // Call renderUIState to apply loaded states and update morning list
+            renderUIState();
         }
 
         function applyFilter() {
@@ -600,20 +623,17 @@
             });
         }
 
-        function resetChecklist() {
-            // Using a custom modal or confirmation message instead of alert/confirm
-            const confirmReset = confirm('Are you sure you want to reset all checks and custom items for this list? This cannot be undone.');
-            if (confirmReset) {
-                localStorage.removeItem(getStorageKey());
-                initialize();
-            }
-        }
-
         function toggleSettings() {
             const content = document.getElementById('settings-content');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
 
+        function resetChecklist() {
+            if(confirm("Are you sure you want to reset all checks and custom items for this list?")) {
+                localStorage.removeItem(getStorageKey());
+                initialize();
+            }
+        }
     </script>
 </body>
 </html>
