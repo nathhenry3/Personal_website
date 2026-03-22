@@ -25,11 +25,10 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            padding-bottom: 80px; /* Space for bottom actions */
+            padding-bottom: 80px;
             font-size: 16px;
         }
 
-        /* Sticky Progress Bar */
         .progress-container {
             position: sticky;
             top: 0;
@@ -76,7 +75,6 @@
             font-size: 1.8em;
         }
 
-        /* Controls */
         .controls-card {
             background-color: var(--card-bg);
             padding: 15px;
@@ -112,7 +110,6 @@
             width: 100%;
         }
 
-        /* Morning Pack Section */
         .morning-pack-container {
             border: 2px dashed var(--morning-border);
             padding: 15px;
@@ -131,7 +128,6 @@
             gap: 10px;
         }
 
-        /* Categories (Accordion) */
         .category-section {
             background-color: var(--section-bg);
             border-radius: 8px;
@@ -173,7 +169,6 @@
             padding: 5px 15px 15px 15px;
         }
 
-        /* List Items */
         .checklist-item {
             display: flex;
             justify-content: space-between;
@@ -203,7 +198,6 @@
             color: #777;
         }
 
-        /* Checkbox Styling */
         input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
@@ -230,11 +224,10 @@
             top: 0px;
         }
 
-        /* Item Actions */
         .item-actions {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .am-toggle {
@@ -249,20 +242,20 @@
             border-radius: 4px;
         }
 
-        .delete-btn {
+        .icon-btn {
             background: none;
             border: none;
-            color: var(--danger);
             cursor: pointer;
             padding: 5px;
             opacity: 0.7;
+            display: flex;
+            align-items: center;
         }
 
-        .delete-btn:hover {
-            opacity: 1;
-        }
+        .icon-btn:hover { opacity: 1; }
+        .edit-btn { color: var(--accent); }
+        .delete-btn { color: var(--danger); }
 
-        /* Add Item Section */
         .add-item-section {
             background-color: var(--card-bg);
             padding: 20px;
@@ -283,7 +276,7 @@
             border: 1px solid var(--accent);
             background-color: var(--bg-color);
             color: white;
-            font-size: 16px; /* Prevents iOS zoom */
+            font-size: 16px;
         }
 
         .btn {
@@ -299,9 +292,7 @@
         .btn-primary { background-color: var(--success); }
         .btn-danger { background-color: var(--danger); }
         .btn-secondary { background-color: #555; }
-        .btn:hover { opacity: 0.9; }
 
-        /* Settings Area */
         .settings-area {
             margin-top: 40px;
             border-top: 1px solid #444;
@@ -325,9 +316,7 @@
             border-radius: 8px;
         }
 
-        .settings-content.open {
-            display: block;
-        }
+        .settings-content.open { display: block; }
 
         .btn-group {
             display: flex;
@@ -338,7 +327,6 @@
 
         .hidden { display: none !important; }
 
-        /* Confetti Canvas */
         #confetti-canvas {
             position: fixed;
             top: 0;
@@ -362,8 +350,8 @@
             }
             .item-actions {
                 width: 100%;
-                justify-content: space-between;
-                padding-left: 32px; /* Align with text */
+                justify-content: flex-end;
+                padding-left: 32px;
                 box-sizing: border-box;
             }
         }
@@ -371,10 +359,8 @@
 </head>
 <body>
 
-    <!-- Canvas for celebration -->
     <canvas id="confetti-canvas"></canvas>
 
-    <!-- Sticky Progress Bar -->
     <div class="progress-container">
         <div class="progress-label">
             <span id="progress-text">Packed: 0%</span>
@@ -407,15 +393,11 @@
         </div>
 
         <div id="morning-section" class="morning-pack-container hidden">
-            <h3>
-                <span>☀️</span> Pack in the Morning
-            </h3>
+            <h3><span>☀️</span> Pack in the Morning</h3>
             <div id="morning-list"></div>
         </div>
 
-        <div id="main-list-container">
-            <!-- Categories generate here -->
-        </div>
+        <div id="main-list-container"></div>
 
         <div class="add-item-section">
             <h3>Add Custom Item</h3>
@@ -431,7 +413,7 @@
             </div>
             <div id="settings-content" class="settings-content">
                 <p style="margin-top:0; color: #bbb; font-size: 0.9em;">
-                    Use "Export" to save a file you can send to your partner. Use "Import" to load their file.
+                    Use "Export" to save a file for your partner. Use "Import" to load theirs.
                 </p>
                 <div class="btn-group">
                     <button class="btn btn-secondary" onclick="exportData()">⬇ Export Data</button>
@@ -472,7 +454,7 @@
             }
         };
 
-        // --- STATE MANAGEMENT ---
+        // --- STATE ---
         let currentType = 'overseas';
         let state = {
             overseas: { items: {}, custom: [] },
@@ -480,24 +462,16 @@
             local: { items: {}, custom: [] }
         };
 
-        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             loadState();
-            
-            // Check if user has a preference saved
             const savedType = localStorage.getItem('checklist_pref_type');
             if(savedType) {
                 currentType = savedType;
                 document.getElementById('checklist-type').value = currentType;
             }
-            
-            // Add Enter key listener for adding items
-            document.getElementById('custom-input').addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    addCustomItem();
-                }
+            document.getElementById('custom-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addCustomItem();
             });
-
             renderList();
         });
 
@@ -507,7 +481,7 @@
             renderList();
         }
 
-        // --- CORE RENDER LOGIC ---
+        // --- RENDER ---
         function renderList() {
             const container = document.getElementById('main-list-container');
             const morningContainer = document.getElementById('morning-list');
@@ -523,12 +497,9 @@
             let packedItems = 0;
             let hasMorningItems = false;
 
-            // 1. Render Standard Categories
             for (const [category, items] of Object.entries(data)) {
-                // Create Accordion Section
                 const section = document.createElement('div');
                 section.className = 'category-section';
-                // Restore collapsed state if desired, for now default open
                 
                 const header = document.createElement('h3');
                 header.className = 'category-header';
@@ -540,28 +511,26 @@
 
                 let visibleCount = 0;
 
-                items.forEach(itemText => {
-                    const id = sanitizeId(category + itemText);
-                    const itemData = currentState.items[id] || { packed: false, am: false };
+                items.forEach(originalText => {
+                    const id = sanitizeId(category + originalText);
+                    const itemData = currentState.items[id] || { packed: false, am: false, renamed: null };
                     
-                    // Stats
                     totalItems++;
                     if (itemData.packed) packedItems++;
 
-                    // Render Logic
                     const isVisible = !(filter === 'unpacked' && itemData.packed);
-                    if (isVisible) visibleCount++;
+                    const displayName = itemData.renamed || originalText;
 
-                    // Morning Logic
                     if (itemData.am) {
                         hasMorningItems = true;
                         if(filter !== 'unpacked' || !itemData.packed) {
-                            morningContainer.appendChild(createItemEl(itemText, id, itemData, true));
+                            morningContainer.appendChild(createItemEl(displayName, id, itemData, true));
                         }
                     }
 
                     if (isVisible) {
-                        listDiv.appendChild(createItemEl(itemText, id, itemData, false));
+                        visibleCount++;
+                        listDiv.appendChild(createItemEl(displayName, id, itemData, false));
                     }
                 });
 
@@ -572,7 +541,6 @@
                 }
             }
 
-            // 2. Render Custom Items
             if (currentState.custom.length > 0) {
                 const customSection = document.createElement('div');
                 customSection.className = 'category-section';
@@ -584,9 +552,7 @@
                 currentState.custom.forEach((item, index) => {
                     totalItems++;
                     if (item.packed) packedItems++;
-
                     const isVisible = !(filter === 'unpacked' && item.packed);
-                    if (isVisible) visibleCustom++;
 
                     if (item.am) {
                         hasMorningItems = true;
@@ -596,6 +562,7 @@
                     }
 
                     if (isVisible) {
+                        visibleCustom++;
                         listDiv.appendChild(createCustomItemEl(item, index, false));
                     }
                 });
@@ -606,7 +573,6 @@
                 }
             }
 
-            // 3. UI Updates
             morningSection.classList.toggle('hidden', !hasMorningItems);
             updateProgress(packedItems, totalItems);
             saveState();
@@ -615,7 +581,6 @@
         function createItemEl(text, id, data, isMorningView) {
             const div = document.createElement('div');
             div.className = 'checklist-item';
-            
             const checkboxId = isMorningView ? `am-check-${id}` : `check-${id}`;
             
             div.innerHTML = `
@@ -625,22 +590,24 @@
                 </label>
                 <div class="item-actions">
                     ${!isMorningView ? `
+                    <button class="icon-btn edit-btn" title="Edit Item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
                     <label class="am-toggle">
-                        <input type="checkbox" ${data.am ? 'checked' : ''} onchange="toggleAM('${id}')">
-                        Pack AM
+                        <input type="checkbox" ${data.am ? 'checked' : ''}> Pack AM
                     </label>` : ''}
                 </div>
             `;
 
-            // Checkbox handler
-            div.querySelector(`input[type="checkbox"]`).onchange = (e) => {
-                state[currentType].items[id] = { 
-                    ...data, 
-                    packed: e.target.checked 
-                };
+            div.querySelector('input[type="checkbox"]').onchange = (e) => {
+                state[currentType].items[id] = { ...data, packed: e.target.checked };
                 renderList();
             };
 
+            if (!isMorningView) {
+                div.querySelector('.am-toggle input').onchange = () => toggleAM(id);
+                div.querySelector('.edit-btn').onclick = () => editStandardItem(id, text);
+            }
             return div;
         }
 
@@ -655,48 +622,53 @@
                 </label>
                 <div class="item-actions">
                     ${!isMorningView ? `
+                    <button class="icon-btn edit-btn" title="Edit">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
                     <label class="am-toggle">
-                        <input type="checkbox" ${item.am ? 'checked' : ''}>
-                        Pack AM
+                        <input type="checkbox" ${item.am ? 'checked' : ''}> Pack AM
                     </label>
-                    <button class="delete-btn" aria-label="Delete item">
+                    <button class="icon-btn delete-btn" title="Delete">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>` : ''}
                 </div>
             `;
 
-            div.querySelector(`input[type="checkbox"]`).onchange = (e) => {
+            div.querySelector('input[type="checkbox"]').onchange = (e) => {
                 state[currentType].custom[index].packed = e.target.checked;
                 renderList();
             };
 
-            // Attach event listeners via JS instead of HTML string to ensure reliability
             if (!isMorningView) {
-                // AM Toggle
-                const amCheckbox = div.querySelector('.am-toggle input');
-                if (amCheckbox) {
-                    amCheckbox.onchange = () => toggleCustomAM(index);
-                }
-
-                // Delete Button
-                const delBtn = div.querySelector('.delete-btn');
-                if (delBtn) {
-                    delBtn.onclick = () => deleteCustomItem(index);
-                }
+                div.querySelector('.am-toggle input').onchange = () => toggleCustomAM(index);
+                div.querySelector('.edit-btn').onclick = () => editCustomItem(index, item.text);
+                div.querySelector('.delete-btn').onclick = () => deleteCustomItem(index);
             }
-
             return div;
         }
 
         // --- ACTIONS ---
-
         function addCustomItem() {
             const input = document.getElementById('custom-input');
             const val = input.value.trim();
             if (!val) return;
-
             state[currentType].custom.push({ text: val, packed: false, am: false });
             input.value = '';
+            renderList();
+        }
+
+        function editStandardItem(id, currentText) {
+            const newText = prompt("Edit item:", currentText);
+            if (newText === null || newText.trim() === "") return;
+            const current = state[currentType].items[id] || { packed: false, am: false };
+            state[currentType].items[id] = { ...current, renamed: newText.trim() };
+            renderList();
+        }
+
+        function editCustomItem(index, currentText) {
+            const newText = prompt("Edit item:", currentText);
+            if (newText === null || newText.trim() === "") return;
+            state[currentType].custom[index].text = newText.trim();
             renderList();
         }
 
@@ -723,10 +695,7 @@
             document.getElementById('progress-fill').style.width = `${percentage}%`;
             document.getElementById('progress-text').textContent = `Packed: ${percentage}%`;
             document.getElementById('items-count').textContent = `${packed}/${total}`;
-
-            if (percentage === 100 && total > 0) {
-                fireConfetti();
-            }
+            if (percentage === 100 && total > 0) fireConfetti();
         }
 
         function toggleSettings() {
@@ -734,93 +703,59 @@
         }
 
         function resetList() {
-            if (confirm("Reset current checks? (Custom items will remain)")) {
-                // Clear packed status but keep custom items and AM settings
-                Object.keys(state[currentType].items).forEach(key => {
-                    state[currentType].items[key].packed = false;
-                });
+            if (confirm("Reset current checks?")) {
+                Object.keys(state[currentType].items).forEach(key => state[currentType].items[key].packed = false);
                 state[currentType].custom.forEach(item => item.packed = false);
                 renderList();
-                document.getElementById('settings-content').classList.remove('open');
             }
         }
 
-        // --- EXPORT / IMPORT ---
+        function saveState() { localStorage.setItem('checklist_state_v2', JSON.stringify(state)); }
+        function loadState() {
+            const saved = localStorage.getItem('checklist_state_v2');
+            if (saved) state = JSON.parse(saved);
+        }
+        function sanitizeId(str) { return str.replace(/[^a-zA-Z0-9]/g, ''); }
+
+        // --- EXPORT/IMPORT ---
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "packing_list_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "packing_list.json");
+            dl.click();
         }
-
-        function triggerImport() {
-            document.getElementById('import-file').click();
-        }
-
+        function triggerImport() { document.getElementById('import-file').click(); }
         function importData(input) {
             const file = input.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
-                    const loadedState = JSON.parse(e.target.result);
-                    // Basic validation
-                    if(loadedState.overseas && loadedState.camping) {
-                        state = loadedState;
-                        saveState();
-                        renderList();
-                        alert("List imported successfully!");
-                    } else {
-                        throw new Error("Invalid file format");
-                    }
-                } catch(err) {
-                    alert("Error loading file. Make sure it's a valid JSON backup.");
-                }
+                    state = JSON.parse(e.target.result);
+                    saveState();
+                    renderList();
+                } catch(err) { alert("Invalid file."); }
             };
             reader.readAsText(file);
         }
 
-        // --- UTILS ---
-        function sanitizeId(str) {
-            return str.replace(/[^a-zA-Z0-9]/g, '');
-        }
-
-        function saveState() {
-            localStorage.setItem('checklist_state_v2', JSON.stringify(state));
-        }
-
-        function loadState() {
-            const saved = localStorage.getItem('checklist_state_v2');
-            if (saved) {
-                state = JSON.parse(saved);
-            }
-        }
-
-        // --- CONFETTI (Simple Canvas implementation) ---
         function fireConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
             const pieces = [];
-            const colors = ['#f0ad4e', '#7b8ff3', '#5cb85c', '#c9302c', '#ffffff'];
-            
             for(let i=0; i<100; i++) {
                 pieces.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height - canvas.height,
-                    color: colors[Math.floor(Math.random() * colors.length)],
+                    color: ['#f0ad4e', '#7b8ff3', '#5cb85c'][Math.floor(Math.random()*3)],
                     size: Math.random() * 10 + 5,
                     speed: Math.random() * 5 + 2,
                     angle: Math.random() * 6.2
                 });
             }
-
             function animate() {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
                 let active = false;
@@ -835,9 +770,7 @@
                     ctx.restore();
                     if(p.y < canvas.height) active = true;
                 });
-                
                 if(active) requestAnimationFrame(animate);
-                else ctx.clearRect(0,0, canvas.width, canvas.height);
             }
             animate();
         }
