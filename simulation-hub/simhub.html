@@ -4,16 +4,27 @@
   <meta charset="UTF-8">
   <title>Simulation Library</title>
   <style>
+    :root {
+      --bg: #070b16;
+      --panel: #111d33;
+      --panel-border: #203454;
+      --text: #e3eeff;
+      --accent: #33d1ff;
+      --accent-soft: rgba(51, 209, 255, 0.15);
+      --input-bg: #0c1627;
+    }
     body {
-      background: #1b1b1b;
-      color: #e0e0e0;
+      background: radial-gradient(circle at top, #101a2d 0%, var(--bg) 50%);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
       line-height: 1.6;
       margin: 2em;
+      min-height: 100vh;
     }
     h1 {
-      color: #ffb347;
+      color: var(--accent);
       text-align: center;
+      text-shadow: 0 0 14px rgba(51, 209, 255, 0.35);
     }
     p {
       max-width: 700px;
@@ -27,33 +38,37 @@
       font-size: 1em;
       width: 100%;
       max-width: 400px;
-      background: #262626;
-      border: 1px solid #444;
-      color: #e0e0e0;
+      background: var(--input-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text);
     }
     summary {
       cursor: pointer;
       font-weight: bold;
-      color: #ffb347;
+      color: var(--accent);
       font-size: 1.1rem;
       padding: 0.25rem 0;
     }
     details {
       margin-bottom: 1.25rem;
-      background: #262626;
-      border-radius: 6px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
       padding: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
     ul {
       list-style-type: none;
       padding-left: 1em;
     }
     a {
-      color: #4fd1fe;
+      color: var(--accent);
       text-decoration: none;
     }
     a:hover {
       text-decoration: underline;
+      text-shadow: 0 0 10px rgba(51, 209, 255, 0.35);
     }
   </style>
 </head>
