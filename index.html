@@ -6,10 +6,15 @@
   <title>Dr Nathan Henry | Postdoctoral Research Associate</title>
   <style>
     :root {
-      --bg: #1b1b1b;
-      --fg: #e0e0e0;
-      --accent: #ffb347;
-      --card-bg: #262626;
+      --bg: #070b16;
+      --bg-elevated: #0f1729;
+      --fg: #e3eeff;
+      --muted: #9ab0d1;
+      --accent: #33d1ff;
+      --accent-soft: rgba(51, 209, 255, 0.14);
+      --card-bg: #111d33;
+      --card-border: #203454;
+      --divider: #1a2b49;
     }
     *, *::before, *::after {
       box-sizing: border-box;
@@ -17,14 +22,16 @@
       padding: 0;
     }
     body {
-      background: var(--bg);
+      background: radial-gradient(circle at top, #101a2d 0%, var(--bg) 55%);
       color: var(--fg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
       line-height: 1.6;
+      min-height: 100vh;
     }
     header {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 2.5rem 1rem 2rem;
+      margin-bottom: 0.5rem;
     }
     header img {
       width: 180px;
@@ -33,71 +40,96 @@
       object-fit: cover;
       margin-bottom: 1rem;
       border: 2px solid var(--accent);
+      box-shadow: 0 0 18px rgba(51, 209, 255, 0.22);
     }
     h1 {
-      font-size: 2rem;
+      font-size: clamp(2rem, 4vw, 2.5rem);
+      line-height: 1.2;
       margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
     }
     h2 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: var(--accent);
       margin-bottom: 2rem;
+      font-weight: 500;
     }
     nav {
       text-align: center;
       margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--divider);
     }
     nav a {
       color: var(--fg);
-      margin: 0 1rem;
+      margin: 0 0.85rem;
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.2s ease;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
     }
     nav a:hover {
       color: var(--accent);
-    }
-    nav a.sim-hub {
-      font-weight: 600;
-      font-size: 1.05rem;
-      background-color: rgba(255, 179, 71, 0.1);
-      padding: 0.25rem 0.75rem;
-      border-radius: 4px;
-    }
-    nav a.sim-hub::before {
-      content: "› ";
-      color: var(--accent);
+      text-shadow: 0 0 10px rgba(51, 209, 255, 0.35);
     }
     main {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 0 1rem 2rem;
     }
     section {
       background: var(--card-bg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      border-radius: 8px;
+      padding: 1.75rem;
+      margin-bottom: 1.15rem;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
     section h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.75rem;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
       color: var(--accent);
+      letter-spacing: 0.01em;
+    }
+    section + section {
+      margin-top: 1.2rem;
+    }
+    section p + p {
+      margin-top: 0.9rem;
     }
     ul {
       list-style: none;
       margin-top: 0.5rem;
     }
     ul li {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.65rem;
+      padding-left: 0.9rem;
+      position: relative;
+    }
+    ul li::before {
+      content: "•";
+      color: var(--accent);
+      position: absolute;
+      left: 0;
+    }
+    ol.publications {
+      margin-left: 1.4rem;
+      display: grid;
+      gap: 1rem;
+    }
+    ol.publications li {
+      padding-left: 0.25rem;
     }
     footer {
       text-align: center;
       padding: 1rem;
       font-size: 0.875rem;
+      color: var(--muted);
     }
     a.external {
       color: var(--accent);
+    }
+    .doi {
+      word-break: break-word;
     }
   </style>
 </head>
@@ -107,12 +139,12 @@
     <h1>Dr Nathan Henry</h1>
     <h2>Postdoctoral Research Associate, UWA</h2>
     <nav>
-      <a href="simulation-hub/simhub.html" class="external sim-hub">Simulation Library</a>
       <a href="https://orcid.org/0000-0002-4299-1442" class="external">ORCID</a>
       <a href="https://scholar.google.com/citations?user=877g53UAAAAJ&hl=en&inst=3028249956058794315" class="external">Google Scholar</a>
       <a href="https://www.researchgate.net/profile/Nathan-Henry-4" class="external">ResearchGate</a>
       <a href="https://github.com/nathhenry3" class="external">GitHub</a>
       <a href="https://www.linkedin.com/in/nathan-henry-5955b2b3/" class="external">LinkedIn</a>
+      <a href="#publications">Publications</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
@@ -120,9 +152,7 @@
     <section id="about">
       <h3>About</h3>
       <p>Nathan is a postdoctoral research associate within the Human Factors and Applied Cognition lab at the University of Western Australia, where he is developing novel paradigms for attentional control training to enhance the performance of submarine operators. His broader interests lie in the intersection between human psychology and digital technologies, including artificial intelligence.</p>
-      <br>
       <p>Nathan’s doctoral research explored the psychological impact of Internet and pornography addiction, employing novel mathematical models to quantify the emotional dynamics produced by these behaviors. In particular, he is interested in the use of Ecological Momentary Assessment (also known as the Experience Sampling Method) for measuring high-frequency variation in emotional states.</p>
-      <br>
       <p>Originally trained as a physicist at the University of Auckland, Nathan worked at Auckland City Hospital as a Medical Physics Registrar, while also obtaining his Master’s degree in Medical Physics at the University of Canterbury. He previously worked as a data manager and analyst at Auckland University of Technology, providing statistical support within the Faculty of Health and Environmental Sciences.</p>
     </section>
     <section id="interests">
@@ -143,6 +173,16 @@
         <li>MSc Medical Physics (Distinction), University of Canterbury (2016–2019)</li>
         <li>BTech (Hons) Medical Physics, University of Auckland (2012–2015)</li>
       </ul>
+    </section>
+    <section id="publications">
+      <h3>Selected Publications</h3>
+      <ol class="publications">
+        <li>Henry, N. I. N., Pedersen, M., Williams, M., et al. (2025). Quantifying opponent process dynamics in pornography use and masturbation: An exploratory ecological momentary assessment study. <em>Archives of Sexual Behavior, 54</em>, 3313–3334. <a class="external doi" href="https://doi.org/10.1007/s10508-025-03287-z">https://doi.org/10.1007/s10508-025-03287-z</a></li>
+        <li>Henry, N. I. N., Pedersen, M., Williams, M., Martin, J. L. B., &amp; Donkin, L. (2025). Reducing echo chamber effects: An allostatic regulator for recommendation algorithms. <em>Journal of Psychology and AI, 1</em>(1). <a class="external doi" href="https://doi.org/10.1080/29974100.2025.2517191">https://doi.org/10.1080/29974100.2025.2517191</a></li>
+        <li>Henry, N. I. N., Pedersen, M., Williams, M., et al. (2025). A hormetic approach to the value-loading problem: Preventing the paperclip apocalypse. <em>SN Computer Science, 6</em>, 872. <a class="external doi" href="https://doi.org/10.1007/s42979-025-04369-4">https://doi.org/10.1007/s42979-025-04369-4</a></li>
+        <li>Henry, N., Donkin, L., Williams, M., &amp; Pedersen, M. (2022). mHealth technologies for managing problematic pornography use: Content analysis. <em>JMIR Formative Research, 6</em>(10), e39869. <a class="external doi" href="https://doi.org/10.2196/39869">https://doi.org/10.2196/39869</a></li>
+        <li>Henry, N., Pedersen, M., Williams, M., &amp; Donkin, L. (2023). Behavioral posology: A novel paradigm for modeling the healthy limits of behaviors. <em>Advanced Theory and Simulations, 6</em>, 2300214. <a class="external doi" href="https://doi.org/10.1002/adts.202300214">https://doi.org/10.1002/adts.202300214</a></li>
+      </ol>
     </section>
     <section id="contact">
       <h3>Contact</h3>
