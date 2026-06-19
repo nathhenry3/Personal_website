@@ -77,12 +77,11 @@
       padding: 0 1rem 2rem;
     }
     section {
-      background: var(--card-bg);
+      background: linear-gradient(135deg, rgba(51, 209, 255, 0.08), transparent 34%), var(--card-bg);
       padding: 1.75rem;
       margin-bottom: 1.15rem;
-      border-radius: 10px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-radius: 14px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), inset 4px 0 0 var(--accent);
     }
     section h3 {
       font-size: 1.4rem;
@@ -131,6 +130,12 @@
     .doi {
       word-break: break-word;
     }
+    .resource-links {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -178,8 +183,9 @@
     <section id="software">
       <h3>Software</h3>
       <ul>
-        <li><strong>MooBlock</strong> - a browser extension to block distracting websites with adaptive friction (and cows).</li>
-        <li><a class="external" href="https://chromewebstore.google.com/detail/mooblock/eanbagjehdbjikaaoomkkmfikemcedmp">Chrome Web Store</a> | <a class="external" href="https://addons.mozilla.org/en-US/firefox/addon/mooblock">Firefox Add-Ons</a></li>
+        <li><strong>MooBlock</strong> - a browser extension to block distracting websites with adaptive friction (and cows).
+          <span class="resource-links"><a class="external" href="https://chromewebstore.google.com/detail/mooblock/eanbagjehdbjikaaoomkkmfikemcedmp">Chrome Web Store</a> | <a class="external" href="https://addons.mozilla.org/en-US/firefox/addon/mooblock">Firefox Add-Ons</a></span>
+        </li>
       </ul>
     </section>
     <section id="publications">
@@ -198,7 +204,10 @@
     </section>
   </main>
   <footer>
-    &copy; 2025 Nathan Henry
+    &copy; <span id="current-year"></span> Nathan Henry
   </footer>
+  <script>
+    document.getElementById("current-year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
