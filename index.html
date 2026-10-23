@@ -3,166 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171717">
+  <meta name="description" content="Dr Nathan Henry — postdoctoral researcher in mathematical psychology at the University of Western Australia.">
   <title>Dr Nathan Henry | Postdoctoral Research Associate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #070b16;
-      --bg-elevated: #0f1729;
-      --fg: #e3eeff;
-      --muted: #9ab0d1;
-      --accent: #33d1ff;
-      --accent-soft: rgba(51, 209, 255, 0.14);
-      --card-bg: #111d33;
-      --card-border: #203454;
-      --divider: #1a2b49;
+      --bg: #171819;
+      --bg-deep: #121314;
+      --card-bg: #272727;
+      --card-border: #383838;
+      --fg: #f1ede5;
+      --body-text: #d5d1ca;
+      --muted: #a29f9a;
+      --accent: #d8a34a;
+      --accent-dim: rgba(216, 163, 74, 0.35);
+      --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      background: radial-gradient(circle at top, #101a2d 0%, var(--bg) 55%);
-      color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      line-height: 1.6;
+      margin: 0;
       min-height: 100vh;
+      background: radial-gradient(ellipse at 50% 8%, #212222 0%, var(--bg) 38%, var(--bg-deep) 100%);
+      color: var(--body-text);
+      font: 400 0.94rem/1.75 var(--sans);
+      -webkit-font-smoothing: antialiased;
     }
-    header {
+
+    /* Simple navigation — no duplicate name/logo in the top-left. */
+    .top-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.25rem 1.55rem;
+      padding: 0.9rem 1.2rem 0.8rem;
+      border-bottom: 1px solid #383838;
+      background: rgba(18, 19, 20, 0.88);
+    }
+    .top-nav a {
+      padding: 0.15rem 0 0.45rem;
+      color: #d7d2c9;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.055em;
+      text-decoration: none;
+      text-transform: uppercase;
+      border-bottom: 1px solid transparent;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .top-nav a:hover,
+    .top-nav a:focus-visible,
+    .top-nav a[aria-current="page"] {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    .hero {
+      padding: 1.9rem 1rem 1.5rem;
       text-align: center;
-      padding: 2.5rem 1rem 2rem;
-      margin-bottom: 0.5rem;
     }
-    header img {
-      width: 180px;
-      height: 180px;
+    .hero img {
+      display: block;
+      width: 148px;
+      height: 148px;
+      margin: 0 auto 0.75rem;
+      border: 1.5px solid var(--accent);
       border-radius: 50%;
       object-fit: cover;
-      margin-bottom: 1rem;
-      border: 2px solid var(--accent);
-      box-shadow: 0 0 18px rgba(51, 209, 255, 0.22);
     }
-    h1 {
-      font-size: clamp(2rem, 4vw, 2.5rem);
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
-      letter-spacing: 0.02em;
-    }
-    h2 {
-      font-size: 1.1rem;
-      color: var(--accent);
-      margin-bottom: 2rem;
-      font-weight: 500;
-    }
-    nav {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--divider);
-    }
-    nav a {
+    .hero h1 {
+      margin: 0;
       color: var(--fg);
-      margin: 0 0.85rem;
-      text-decoration: none;
+      font: 600 clamp(2.7rem, 6vw, 3.55rem)/1 var(--serif);
+    }
+    .hero h1::after {
+      display: block;
+      width: 48px;
+      height: 1px;
+      margin: 0.8rem auto 0.7rem;
+      background: var(--accent);
+      content: "";
+    }
+    .hero .subtitle {
+      margin: 0;
+      color: #dedbd6;
+      font-size: 0.71rem;
       font-weight: 500;
-      transition: color 0.2s ease, text-shadow 0.2s ease;
+      letter-spacing: 0.23em;
+      line-height: 1.8;
+      text-transform: uppercase;
     }
-    nav a:hover {
-      color: var(--accent);
-      text-shadow: 0 0 10px rgba(51, 209, 255, 0.35);
-    }
+
     main {
-      max-width: 900px;
+      width: min(100% - 2.2rem, 970px);
       margin: 0 auto;
-      padding: 0 1rem 2rem;
+      padding: 0.4rem 0 2.3rem;
     }
     section {
-      background: linear-gradient(135deg, rgba(51, 209, 255, 0.08), transparent 34%), var(--card-bg);
-      padding: 1.75rem;
       margin-bottom: 1.15rem;
-      border-radius: 14px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), inset 4px 0 0 var(--accent);
+      padding: 1.65rem clamp(1.3rem, 4vw, 3.8rem) 1.85rem;
+      background: linear-gradient(125deg, rgba(255,255,255,0.022), rgba(255,255,255,0) 48%), var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      box-shadow: 0 10px 27px rgba(0, 0, 0, 0.13);
+      scroll-margin-top: 1rem;
     }
-    section h3 {
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-      color: var(--accent);
-      letter-spacing: 0.01em;
+    section h2 {
+      margin: 0 0 0.8rem;
+      color: var(--fg);
+      font: 600 clamp(1.85rem, 3vw, 2.2rem)/1.1 var(--serif);
     }
-    section + section {
-      margin-top: 1.2rem;
+    section h2::after {
+      display: block;
+      width: 46px;
+      height: 1px;
+      margin-top: 0.6rem;
+      background: var(--accent);
+      content: "";
     }
-    section p + p {
-      margin-top: 0.9rem;
-    }
+    section p { margin: 0; }
+    section p + p { margin-top: 0.9rem; }
+
     ul {
+      margin: 0;
+      padding: 0;
       list-style: none;
-      margin-top: 0.5rem;
     }
     ul li {
-      margin-bottom: 0.65rem;
-      padding-left: 0.9rem;
       position: relative;
+      margin: 0 0 0.48rem;
+      padding-left: 1.3rem;
     }
     ul li::before {
-      content: "•";
-      color: var(--accent);
       position: absolute;
-      left: 0;
+      top: 0;
+      left: 0.1rem;
+      color: var(--accent);
+      content: "•";
     }
+    #interests ul { columns: 2; column-gap: 3.5rem; }
+    #interests li { break-inside: avoid; }
+
     ol.publications {
-      margin-left: 1.4rem;
       display: grid;
       gap: 1rem;
+      margin: 0 0 0 1.25rem;
+      padding: 0;
     }
-    ol.publications li {
-      padding-left: 0.25rem;
-    }
+    ol.publications li { padding-left: 0.35rem; }
+    ol.publications li::marker { color: var(--accent); }
+    strong { color: var(--fg); font-weight: 600; }
+    em { color: #e8e4dc; }
+    a.external { color: #e4b765; text-decoration-color: var(--accent-dim); text-underline-offset: 0.2em; }
+    a.external:hover { color: #f1d199; text-decoration-color: currentColor; }
+    .doi { overflow-wrap: anywhere; }
+    .resource-links { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.88rem; }
+
     footer {
+      padding: 0.4rem 1rem 1.8rem;
+      color: var(--muted);
+      font-size: 0.77rem;
       text-align: center;
-      padding: 1rem;
-      font-size: 0.875rem;
-      color: var(--muted);
     }
-    a.external {
-      color: var(--accent);
+    @media (max-width: 650px) {
+      body { font-size: 0.9rem; }
+      .top-nav { gap: 0.15rem 1rem; padding-inline: 0.8rem; }
+      .top-nav a { font-size: 0.65rem; }
+      .hero { padding-top: 2rem; }
+      .hero img { width: 130px; height: 130px; }
+      .hero .subtitle { font-size: 0.64rem; letter-spacing: 0.11em; }
+      section { padding: 1.35rem 1.3rem 1.55rem; }
+      #interests ul { columns: 1; }
     }
-    .doi {
-      word-break: break-word;
-    }
-    .resource-links {
-      display: block;
-      margin-top: 0.25rem;
-      color: var(--muted);
-      font-size: 0.95rem;
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="images/profile_pic.jpg" alt="Nathan Henry">
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="#about" aria-current="page">About</a>
+    <a href="https://orcid.org/0000-0002-4299-1442">ORCID</a>
+    <a href="https://scholar.google.com/citations?user=877g53UAAAAJ&amp;hl=en&amp;inst=3028249956058794315">Google Scholar</a>
+    <a href="https://www.researchgate.net/profile/Nathan-Henry-4">ResearchGate</a>
+    <a href="https://github.com/nathhenry3">GitHub</a>
+    <a href="https://www.linkedin.com/in/nathan-henry-5955b2b3/">LinkedIn</a>
+    <a href="#software">Software</a>
+    <a href="#publications">Publications</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <header class="hero">
+    <img src="images/profile_pic.jpg" alt="Portrait of Nathan Henry" width="148" height="148">
     <h1>Dr Nathan Henry</h1>
-    <h2>Postdoctoral Research Associate, UWA</h2>
-    <nav>
-      <a href="https://orcid.org/0000-0002-4299-1442" class="external">ORCID</a>
-      <a href="https://scholar.google.com/citations?user=877g53UAAAAJ&hl=en&inst=3028249956058794315" class="external">Google Scholar</a>
-      <a href="https://www.researchgate.net/profile/Nathan-Henry-4" class="external">ResearchGate</a>
-      <a href="https://github.com/nathhenry3" class="external">GitHub</a>
-      <a href="https://www.linkedin.com/in/nathan-henry-5955b2b3/" class="external">LinkedIn</a>
-      <a href="#software">Software</a>
-      <a href="#publications">Publications</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <p class="subtitle">Postdoctoral Research Associate, UWA</p>
   </header>
+
   <main>
-    <section id="about">
-      <h3>About</h3>
+    <section id="about" aria-labelledby="about-heading">
+      <h2 id="about-heading">About</h2>
       <p>Nathan is a postdoctoral researcher with a mathematical psychology focus at the University of Western Australia. His primary research interest is digital self-regulation, with broader interests at the intersection of human psychology and digital technologies, including artificial intelligence.</p>
       <p>Nathan’s doctoral research explored the psychological impact of Internet and pornography addiction, employing novel mathematical models to quantify the emotional dynamics produced by these behaviors. In particular, he is interested in the use of Ecological Momentary Assessment (also known as the Experience Sampling Method) for measuring high-frequency variation in emotional states.</p>
       <p>Originally trained as a physicist at the University of Auckland, Nathan worked at Auckland City Hospital as a Medical Physics Registrar, while also obtaining his Master’s degree in Medical Physics at the University of Canterbury. He previously worked as a data manager and analyst at Auckland University of Technology, providing statistical support within the Faculty of Health and Environmental Sciences.</p>
     </section>
-    <section id="interests">
-      <h3>Interests</h3>
+
+    <section id="interests" aria-labelledby="interests-heading">
+      <h2 id="interests-heading">Interests</h2>
       <ul>
         <li>Digital self-regulation</li>
         <li>Behavioral addictions (incl. problematic pornography use, or PPU)</li>
@@ -173,33 +226,36 @@
         <li>AI safety</li>
       </ul>
     </section>
-    <section id="education">
-      <h3>Education</h3>
+
+    <section id="education" aria-labelledby="education-heading">
+      <h2 id="education-heading">Education</h2>
       <ul>
-        <li>PhD in Psychology & Neuroscience, Auckland University of Technology (2021–2025)</li>
+        <li>PhD in Psychology &amp; Neuroscience, Auckland University of Technology (2021–2025)</li>
         <li>MSc Medical Physics (Distinction), University of Canterbury (2016–2019)</li>
         <li>BTech (Hons) Medical Physics, University of Auckland (2012–2015)</li>
       </ul>
     </section>
-    <section id="software">
-      <h3>Software</h3>
+
+    <section id="software" aria-labelledby="software-heading">
+      <h2 id="software-heading">Software</h2>
       <ul>
-        <li><strong>MooBlock</strong> - a browser extension to block distracting websites with adaptive friction (and cows).
+        <li><strong>MooBlock</strong> — a browser extension to block distracting websites with adaptive friction (and cows).
           <span class="resource-links"><a class="external" href="https://chromewebstore.google.com/detail/mooblock/eanbagjehdbjikaaoomkkmfikemcedmp">Chrome Web Store</a> | <a class="external" href="https://addons.mozilla.org/en-US/firefox/addon/mooblock">Firefox Add-Ons</a></span>
         </li>
-        <li><strong>DecayBlock</strong> - an early browser-blocking experiment that laid the groundwork for MooBlock.
+        <li><strong>DecayBlock</strong> — an early browser-blocking experiment that laid the groundwork for MooBlock.
           <span class="resource-links"><a class="external" href="https://chromewebstore.google.com/detail/decayblock/lpljcnalipecdlmafjahhdeghgdepdjg">Chrome Web Store</a> | <a class="external" href="https://addons.mozilla.org/en-GB/firefox/addon/decayblock/">Firefox Add-Ons</a></span>
         </li>
-        <li><strong>Harden</strong> - a shinyMobile application for tracking behavioral addictions, built using R Shiny.
+        <li><strong>Harden</strong> — a shinyMobile application for tracking behavioral addictions, built using R Shiny.
           <span class="resource-links"><a class="external" href="https://github.com/nathhenry3/Harden-app">GitHub</a></span>
         </li>
-        <li><strong>HALO</strong> - an R package for performing simulations with the HALO (Hormetic Alignment with Opponent Processes) paradigm, based on utility theory.
+        <li><strong>HALO</strong> — an R package for performing simulations with the HALO (Hormetic Alignment with Opponent Processes) paradigm, based on utility theory.
           <span class="resource-links"><a class="external" href="https://github.com/nathhenry3/HALO">GitHub</a></span>
         </li>
       </ul>
     </section>
-    <section id="publications">
-      <h3>Selected Publications</h3>
+
+    <section id="publications" aria-labelledby="publications-heading">
+      <h2 id="publications-heading">Selected Publications</h2>
       <ol class="publications">
         <li>Henry, N. I. N., Pedersen, M., Williams, M., et al. (2025). Quantifying opponent process dynamics in pornography use and masturbation: An exploratory ecological momentary assessment study. <em>Archives of Sexual Behavior, 54</em>, 3313–3334. <a class="external doi" href="https://doi.org/10.1007/s10508-025-03287-z">https://doi.org/10.1007/s10508-025-03287-z</a></li>
         <li>Henry, N. I. N., Pedersen, M., Williams, M., Martin, J. L. B., &amp; Donkin, L. (2025). Reducing echo chamber effects: An allostatic regulator for recommendation algorithms. <em>Journal of Psychology and AI, 1</em>(1). <a class="external doi" href="https://doi.org/10.1080/29974100.2025.2517191">https://doi.org/10.1080/29974100.2025.2517191</a></li>
@@ -208,14 +264,13 @@
         <li>Henry, N., Pedersen, M., Williams, M., &amp; Donkin, L. (2023). Behavioral posology: A novel paradigm for modeling the healthy limits of behaviors. <em>Advanced Theory and Simulations, 6</em>, 2300214. <a class="external doi" href="https://doi.org/10.1002/adts.202300214">https://doi.org/10.1002/adts.202300214</a></li>
       </ol>
     </section>
-    <section id="contact">
-      <h3>Contact</h3>
+
+    <section id="contact" aria-labelledby="contact-heading">
+      <h2 id="contact-heading">Contact</h2>
       <p>Email: nathan.henry [at] uwa.edu.au</p>
     </section>
   </main>
-  <footer>
-    &copy; <span id="current-year"></span> Nathan Henry
-  </footer>
+  <footer>&copy; <span id="current-year"></span> Nathan Henry</footer>
   <script>
     document.getElementById("current-year").textContent = new Date().getFullYear();
   </script>
